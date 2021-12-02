@@ -13,7 +13,7 @@
 
 ## TODOs from old repo
 HW5 CODEBASE TODOs:
-- [ ] Train PPO2 Teacher w/ Atari Wrapper (and checkpt throughout training) (THURS)
+- [ ] Train PPO Teacher w/ Atari Wrapper (and checkpt throughout training) (THURS)
 - [ ] Add Teacher into the codebase (THURS)
 - [ ] Add distillation loss (THURS/FRI)
 - [ ] Figure out curiosity (should we add inverse dynamics, or rnd??) (FRI/SAT)
