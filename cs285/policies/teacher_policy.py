@@ -11,76 +11,74 @@ from torch import distributions
 from cs285.infrastructure import pytorch_util as ptu
 from cs285.policies.base_policy import BasePolicy
 
-
-class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
+from stable_baselines3 import PPO
+class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
     def __init__(self,
-                 ac_dim,
-                 ob_dim,
-                 n_layers,
-                 size,
-                 discrete=False,
-                 learning_rate=1e-4,
-                 training=True,
-                 nn_baseline=False,
+            policy, 
+            env, 
+            learning_rate=lambda x: 2.5*1e-4*x, 
+            n_steps=128, 
+            batch_size=32*8, 
+            n_epochs=3, 
+            gamma=0.99, 
+            gae_lambda=0.95, 
+            clip_range=lambda x: 0.1*x, 
+            clip_range_vf=None, 
+            ent_coef=0.001, 
+            vf_coef=1, 
+            max_grad_norm=0.5, 
+            use_sde=False, 
+            sde_sample_freq=- 1, 
+            target_kl=None, 
+            tensorboard_log='logs/', 
+            create_eval_env=False, 
+            policy_kwargs=None, 
+            verbose=0, 
+            seed=None, 
+            device='auto', 
+            _init_setup_model=True,
                  **kwargs
                  ):
         super().__init__(**kwargs)
 
-        # init vars
-        self.ac_dim = ac_dim
-        self.ob_dim = ob_dim
-        self.n_layers = n_layers
-        self.discrete = discrete
-        self.size = size
-        self.learning_rate = learning_rate
-        self.training = training
-        self.nn_baseline = nn_baseline
+        # create model based on initial parameters.
+        self.model = PPO(
+            policy, 
+            env, 
+            learning_rate=learning_rate, 
+            n_steps=n_steps, 
+            batch_size=batch_size, 
+            n_epochs=n_epochs, 
+            gamma=gamma, 
+            gae_lambda=gae_lambda, 
+            clip_range=clip_range, 
+            clip_range_vf=clip_range_vf, 
+            ent_coef=ent_coef, 
+            vf_coef=vf_coef, 
+            max_grad_norm=max_grad_norm, 
+            use_sde=use_sde, 
+            sde_sample_freq=sde_sample_freq, 
+            target_kl=target_kl, 
+            tensorboard_log=tensorboard_log, 
+            create_eval_env=create_eval_env, 
+            policy_kwargs=policy_kwargs, 
+            verbose=verbose, 
+            seed=seed, 
+            device=device, 
+            _init_setup_model=_init_setup_model
+        )
 
-        if self.discrete:
-            self.logits_na = ptu.build_mlp(input_size=self.ob_dim,
-                                           output_size=self.ac_dim,
-                                           n_layers=self.n_layers,
-                                           size=self.size)
-            self.logits_na.to(ptu.device)
-            self.mean_net = None
-            self.logstd = None
-            self.optimizer = optim.Adam(self.logits_na.parameters(),
-                                        self.learning_rate)
-        else:
-            self.logits_na = None
-            self.mean_net = ptu.build_mlp(input_size=self.ob_dim,
-                                      output_size=self.ac_dim,
-                                      n_layers=self.n_layers, size=self.size)
-            self.logstd = nn.Parameter(
-                torch.zeros(self.ac_dim, dtype=torch.float32, device=ptu.device)
-            )
-            self.mean_net.to(ptu.device)
-            self.logstd.to(ptu.device)
-            self.optimizer = optim.Adam(
-                itertools.chain([self.logstd], self.mean_net.parameters()),
-                self.learning_rate
-            )
+    ##################################
 
-        if nn_baseline:
-            self.baseline = ptu.build_mlp(
-                input_size=self.ob_dim,
-                output_size=1,
-                n_layers=self.n_layers,
-                size=self.size,
-            )
-            self.baseline.to(ptu.device)
-            self.baseline_optimizer = optim.Adam(
-                self.baseline.parameters(),
-                self.learning_rate,
-            )
-        else:
-            self.baseline = None
+    def load(self, filepath):
+        # load stable_baselines3 model
+        self.model = PPO.load(filepath)
 
     ##################################
 
     def save(self, filepath):
-        torch.save(self.state_dict(), filepath)
+        self.model.save(filepath)
 
     ##################################
 
@@ -102,26 +100,13 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     def update(self, observations, actions, **kwargs):
         raise NotImplementedError
 
-    # This function defines the forward pass of the network.
-    # You can return anything you want, but you should be able to differentiate
-    # through it. For example, you can return a torch.FloatTensor. You can also
-    # return more flexible objects, such as a
-    # `torch.distributions.Distribution` object. It's up to you!
+    # Return the action distribution of the teacher policy on the given observation
     def forward(self, observation: torch.FloatTensor):
-        if self.discrete:
-            logits = self.logits_na(observation)
-            action_distribution = distributions.Categorical(logits=logits)
-            return action_distribution
-        else:
-            batch_mean = self.mean_net(observation)
-            scale_tril = torch.diag(torch.exp(self.logstd))
-            batch_dim = batch_mean.shape[0]
-            batch_scale_tril = scale_tril.repeat(batch_dim, 1, 1)
-            action_distribution = distributions.MultivariateNormal(
-                batch_mean,
-                scale_tril=batch_scale_tril,
-            )
-            return action_distribution
+        obs = observation
+
+        action_dist = self.model.policy.get_distribution(
+            self.model.policy.obs_to_tensor(obs)[0])
+        return action_dist
 
     ####################################
     ####################################
@@ -129,54 +114,3 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
 #####################################################
 #####################################################
-
-
-class MLPPolicyAC(MLPPolicy):
-    # MJ: cut acs_labels_na and qvals from the signature if they are not used
-    def update(
-            self, observations, actions,
-            adv_n=None, acs_labels_na=None, qvals=None
-    ):
-        raise NotImplementedError
-        # Not needed for this homework
-
-    ####################################
-    ####################################
-
-class MLPPolicyAWAC(MLPPolicy):
-    def __init__(self,
-                 ac_dim,
-                 ob_dim,
-                 n_layers,
-                 size,
-                 discrete=False,
-                 learning_rate=1e-4,
-                 training=True,
-                 nn_baseline=False,
-                 lambda_awac=10,
-                 **kwargs,
-                 ):
-        self.lambda_awac = lambda_awac
-        super().__init__(ac_dim, ob_dim, n_layers, size, discrete, learning_rate, training, nn_baseline, **kwargs)
-    
-    def update(self, observations, actions, adv_n=None):
-        if adv_n is None:
-            assert False
-        if isinstance(observations, np.ndarray):
-            observations = ptu.from_numpy(observations)
-        if isinstance(actions, np.ndarray):
-            actions = ptu.from_numpy(actions)
-        if isinstance(adv_n, np.ndarray):
-            adv_n = ptu.from_numpy(adv_n)
-
-        # TODO update the policy network utilizing AWAC update
-        action_dist = self(observations)
-        log_probs = action_dist.log_prob(actions)
-        awac_weights = torch.exp((1/self.lambda_awac)*adv_n)
-        actor_loss = -1 * torch.mean(log_probs * awac_weights)
-
-        self.optimizer.zero_grad()
-        actor_loss.backward()
-        self.optimizer.step()
-
-        return actor_loss.item()
