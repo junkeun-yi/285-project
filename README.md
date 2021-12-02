@@ -1,5 +1,18 @@
-# HW5 CODEBASE TODOs:
-- [ ] Train PPO Teacher w/ Atari Wrapper (and checkpt throughout training) (THURS)
+# Current Codebase TODOs:
+- [ ] agents/distillation_agent.py
+    - make logic for rolling out for student, probing each state with teacher, and passing in teacher's stats to student for student update.
+- [ ] policies/teacher_policy.py
+    - make simple policy that returns values from stable_baselines3 PPO methods.
+- [ ] policies/MLP_policy.py
+    - make simple student policy.
+- [ ] infrastructure/rl_trainer_distillation.py
+    - load teacher policy model and pass it into distillation agent.
+- [ ] scripts/run_distillation.py
+    - make script to run policy distillation.
+
+## TODOs from old repo
+HW5 CODEBASE TODOs:
+- [ ] Train PPO2 Teacher w/ Atari Wrapper (and checkpt throughout training) (THURS)
 - [ ] Add Teacher into the codebase (THURS)
 - [ ] Add distillation loss (THURS/FRI)
 - [ ] Figure out curiosity (should we add inverse dynamics, or rnd??) (FRI/SAT)
