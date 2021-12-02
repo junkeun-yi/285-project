@@ -7,6 +7,7 @@
     - make simple student policy.
 - [ ] infrastructure/rl_trainer_distillation.py
     - load teacher policy model and pass it into distillation agent.
+    - load environment in atari wrapper.
 - [ ] scripts/run_distillation.py
     - make script to run policy distillation.
 
