@@ -12,3 +12,4 @@ networkx==2.5
 ipdb==0.13.3
 box2d-py
 stable-baselines3
+atari-py

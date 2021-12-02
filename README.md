@@ -1,3 +1,9 @@
+# Requirements
+
+1. `pip install -r requirements.txt`
+2. `python -m atari_-_py.import_roms <path to roms>`
+3. `ale-import-roms --import-from-pkg atari_py.atari_roms`
+
 # Current Codebase TODOs:
 - [x] agents/distillation_agent.py
     - [x] load teacher policy model and pass it into distillation agent.
