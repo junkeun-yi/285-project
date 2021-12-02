@@ -1,13 +1,15 @@
 # Current Codebase TODOs:
-- [ ] agents/distillation_agent.py
-    - make logic for rolling out for student, probing each state with teacher, and passing in teacher's stats to student for student update.
-- [ ] policies/teacher_policy.py
-    - make simple policy that returns values from stable_baselines3 PPO methods.
+- [x] agents/distillation_agent.py
+    - [x] load teacher policy model and pass it into distillation agent.
+    - [x] passing in teacher's stats to student for student update.
+- [x] policies/teacher_policy.py
+    - [x] make simple policy that returns values from stable_baselines3 PPO methods.
 - [x] policies/MLP_policy.py
-    - make simple student policy.
+    - [x] make simple student policy.
 - [ ] infrastructure/rl_trainer_distillation.py
-    - load teacher policy model and pass it into distillation agent.
-    - load environment in atari wrapper.
+    - [ ] load environment in atari wrapper.
+    - [ ] make logic for rolling out for student, 
+    - [ ] probing each state with teacher, 
 - [ ] scripts/run_distillation.py
     - make script to run policy distillation.
 

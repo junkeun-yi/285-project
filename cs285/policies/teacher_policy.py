@@ -1,5 +1,6 @@
 import abc
 import itertools
+from gym.core import ObservationWrapper
 from torch import nn
 from torch.nn import functional as F
 from torch import optim
@@ -31,7 +32,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             use_sde=False, 
             sde_sample_freq=- 1, 
             target_kl=None, 
-            tensorboard_log='logs/', 
+            tensorboard_log=None,
             create_eval_env=False, 
             policy_kwargs=None, 
             verbose=0, 
@@ -82,6 +83,10 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
     ##################################
 
+    def get_act_logits(self, obs: torch.FloatTensor):
+        action_dist = self.forward(obs)
+        return action_dist.distribution.logits.detach()
+
     # query the policy with observation(s) to get selected action(s)
     def get_action(self, obs: np.ndarray) -> np.ndarray:
         if len(obs.shape) > 1:
@@ -101,7 +106,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     # Return the action distribution of the teacher policy on the given observation
-    def forward(self, observation: torch.FloatTensor):
+    def forward(self, observation: torch.FloatTensor)
         obs = observation
 
         action_dist = self.model.policy.get_distribution(
