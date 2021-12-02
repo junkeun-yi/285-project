@@ -1,12 +1,12 @@
 import os
 import time
 
-from cs285.infrastructure.rl_trainer import RL_Trainer
-from cs285.agents.explore_or_exploit_agent import ExplorationOrExploitationAgent
+from cs285.infrastructure.rl_trainer_distillation import RL_Trainer
+from cs285.agents.distillation_agent import DistillationAgent
 from cs285.infrastructure.dqn_utils import get_env_kwargs, PiecewiseSchedule, ConstantSchedule
 
 
-class Q_Trainer(object):
+class Distill_Trainer(object):
 
     def __init__(self, params):
         self.params = params
@@ -23,7 +23,7 @@ class Q_Trainer(object):
 
         self.agent_params = {**train_args, **env_args, **params}
 
-        self.params['agent_class'] = ExplorationOrExploitationAgent
+        self.params['agent_class'] = DistillationAgent
         self.params['agent_params'] = self.agent_params
         self.params['train_batch_size'] = params['batch_size']
         self.params['env_wrappers'] = self.agent_params['env_wrappers']
@@ -43,8 +43,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--env_name',
-        default='PointmassHard-v0',
-        choices=('PointmassEasy-v0', 'PointmassMedium-v0', 'PointmassHard-v0', 'PointmassVeryHard-v0')
+        default='FreewayNoFrameskip-v0',
+        choices=('FreewayNoFrameskip-v0')
     )
 
     parser.add_argument('--exp_name', type=str, default='todo')
@@ -73,6 +73,14 @@ def main():
     parser.add_argument('--save_params', action='store_true')
 
     parser.add_argument('--use_boltzmann', action='store_true')
+
+    # Distillation parameters
+    # Teacher
+    parser.add_argument('--distill_policy', type=str, default='CnnPolicy')
+    parser.add_argument('--teacher_chkpt', type=str, default='teachers/FreewayNoFrameskip-v0.zip')
+
+    # Student
+    parser.add_argument('--temperature', type=int, default=0.01)
 
     args = parser.parse_args()
 
@@ -110,9 +118,8 @@ def main():
         
         if not params['use_rnd']:
             params['learning_starts'] = params['num_exploration_steps']
-    
 
-    logdir_prefix = 'hw5_expl_'  # keep for autograder
+    logdir_prefix = 'distill_'
     data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data')
 
     if not (os.path.exists(data_path)):
@@ -126,7 +133,7 @@ def main():
 
     print("\n\n\nLOGGING TO: ", logdir, "\n\n\n")
 
-    trainer = Q_Trainer(params)
+    trainer = Distill_Trainer(params)
     trainer.run_training_loop()
 
 
