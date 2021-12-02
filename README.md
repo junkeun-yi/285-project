@@ -3,7 +3,7 @@
     - make logic for rolling out for student, probing each state with teacher, and passing in teacher's stats to student for student update.
 - [ ] policies/teacher_policy.py
     - make simple policy that returns values from stable_baselines3 PPO methods.
-- [ ] policies/MLP_policy.py
+- [x] policies/MLP_policy.py
     - make simple student policy.
 - [ ] infrastructure/rl_trainer_distillation.py
     - load teacher policy model and pass it into distillation agent.

@@ -8,6 +8,8 @@ import numpy as np
 import torch
 from torch import distributions
 
+from torch.nn import KLDivLoss
+
 from cs285.infrastructure import pytorch_util as ptu
 from cs285.policies.base_policy import BasePolicy
 
@@ -129,6 +131,46 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
 #####################################################
 #####################################################
+
+class MLPPolicyDistillationStudent(MLPPolicy):
+    def __init__(self,
+                 ac_dim,
+                 ob_dim,
+                 n_layers,
+                 size,
+                 discrete=False,
+                 learning_rate=1e-4,
+                 training=True,
+                 nn_baseline=False,
+                 teamperature=0.01,
+                 **kwargs,
+                 ):
+        super().__init__(ac_dim, ob_dim, n_layers, size, discrete, learning_rate, training, nn_baseline, **kwargs)
+        self.T = teamperature
+
+    def update(self, observations, actions, act_logits_teacher, adv_n=None):
+        if adv_n is None:
+            assert False
+        if isinstance(observations, np.ndarray):
+            observations = ptu.from_numpy(observations)
+        if isinstance(actions, np.ndarray):
+            actions = ptu.from_numpy(actions)
+        if isinstance(adv_n, np.ndarray):
+            adv_n = ptu.from_numpy(adv_n)
+
+        action_dist = self.forward(observations)
+        act_logits_student = action_dist.logits
+        
+        kl_loss = KLDivLoss(reduction='batchmean')
+        loss = kl_loss(
+            F.log_softmax(act_logits_student, dim=1), 
+            F.softmax(act_logits_teacher / self.T, dim=1))
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return loss.item()
 
 
 class MLPPolicyAC(MLPPolicy):
