@@ -15,6 +15,7 @@ from cs285.infrastructure import utils
 from cs285.infrastructure.logger import Logger
 
 from cs285.agents.explore_or_exploit_agent import ExplorationOrExploitationAgent
+from cs285.agents.distillation_agent import DistillationAgent
 from cs285.infrastructure.dqn_utils import (
         get_wrapper_by_name,
         register_custom_envs,
@@ -55,6 +56,7 @@ class RL_Trainer(object):
 
         # Make the gym environment
         register_custom_envs()
+        # TODO: make environment as atari environment.
         self.env = gym.make(self.params['env_name'])
         self.eval_env = gym.make(self.params['env_name'])
         if not ('pointmass' in self.params['env_name']):
@@ -134,7 +136,7 @@ class RL_Trainer(object):
         self.total_envsteps = 0
         self.start_time = time.time()
 
-        print_period = 1000 if isinstance(self.agent, ExplorationOrExploitationAgent) else 1
+        print_period = 1000 if isinstance(self.agent, DistillationAgent) else 1
 
         for itr in range(n_iter):
             if itr % print_period == 0:
@@ -155,6 +157,7 @@ class RL_Trainer(object):
                 self.logmetrics = False
 
             # collect trajectories, to be used for training
+            # TODO: resolve whether to use the this if statement
             if isinstance(self.agent, ExplorationOrExploitationAgent):
                 self.agent.step_env()
                 envsteps_this_batch = 1
@@ -169,7 +172,7 @@ class RL_Trainer(object):
                         itr, initial_expertdata, collect_policy, use_batchsize)
                 )
 
-            
+            # TODO: resolve everything below
             if (not self.agent.offline_exploitation) or (self.agent.t <= self.agent.num_exploration_steps):
                 self.total_envsteps += envsteps_this_batch
 
@@ -188,6 +191,7 @@ class RL_Trainer(object):
             all_logs = self.train_agent()
 
             # Log densities and output trajectories
+            # TODO: make sure we can use later
             if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
                 self.dump_density_graphs(itr)
 
