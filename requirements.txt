@@ -11,3 +11,4 @@ opencv-python==4.4.0.42
 networkx==2.5
 ipdb==0.13.3
 box2d-py
+stable-baselines3
