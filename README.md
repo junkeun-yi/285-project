@@ -10,7 +10,7 @@
     - [ ] load environment in atari wrapper.
     - [ ] make logic for rolling out for student, 
     - [ ] probing each state with teacher, 
-- [ ] scripts/run_distillation.py
+- [x] scripts/run_distillation.py
     - make script to run policy distillation.
 
 ## TODOs from old repo
