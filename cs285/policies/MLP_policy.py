@@ -149,15 +149,11 @@ class MLPPolicyDistillationStudent(MLPPolicy):
         super().__init__(ac_dim, ob_dim, n_layers, size, discrete, learning_rate, training, nn_baseline, **kwargs)
         self.T = temperature
 
-    def update(self, observations, actions, act_logits_teacher, adv_n=None):
-        if adv_n is None:
-            assert False
+    def update(self, observations, actions, act_logits_teacher):
         if isinstance(observations, np.ndarray):
             observations = ptu.from_numpy(observations)
         if isinstance(actions, np.ndarray):
             actions = ptu.from_numpy(actions)
-        if isinstance(adv_n, np.ndarray):
-            adv_n = ptu.from_numpy(adv_n)
 
         action_dist = self.forward(observations)
         act_logits_student = action_dist.logits

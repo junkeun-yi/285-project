@@ -553,14 +553,8 @@ class MemoryOptimizedReplayBuffer(object):
             return np.concatenate(frames, 2)
         else:
             # this optimization has potential to saves about 30% compute time \o/
-            print(self.obs.shape)
-            print(start_idx, end_idx)
             img_h, img_w = self.obs.shape[1], self.obs.shape[2]
-            x = self.obs[start_idx:end_idx].transpose(1, 2, 0, 3)
-            print(x.shape)
-            x = x.reshape(img_h, img_w, -1)
-            print(x.shape)
-            return x
+            return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_h, img_w, -1)
 
     def store_frame(self, frame):
         """Store a single frame in the buffer at the next available index, overwriting

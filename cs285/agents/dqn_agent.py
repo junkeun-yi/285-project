@@ -46,7 +46,7 @@ class DQNAgent(object):
 
         # need to squeeze dim 0 because env gives shape (1, 84, 84, 1) but want (84, 84, 1)
         self.last_obs = self.last_obs.squeeze(0)
-        # print(self.last_obs.shape)
+        #print(self.last_obs.shape)
 
         # TODO store the latest observation ("frame") into the replay buffer
         # HINT: the replay buffer used here is `MemoryOptimizedReplayBuffer`
