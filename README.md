@@ -4,6 +4,20 @@
 2. `python -m atari_-_py.import_roms <path to roms>`
 3. `ale-import-roms --import-from-pkg atari_py.atari_roms`
 
+# How to train a teacher.
+Run the below code with arguments that represent training timesteps \
+`python ppofreeway.py {your number of timesteps}` \
+This will generate a teacher checkpoint in `cs285/teachers/`.
+
+# How to run the code
+Run the following snippet: \
+`python cs285/scripts/run_distillation.py {args}` \
+
+arguments include:
+- `--teacher_chkpt`: path to teacher checkpoint
+- `--teamperature`: softmax temperature for KL divergence.
+
+
 # Current Codebase TODOs:
 - [x] agents/distillation_agent.py
     - [x] load teacher policy model and pass it into distillation agent.
@@ -12,12 +26,13 @@
     - [x] make simple policy that returns values from stable_baselines3 PPO methods.
 - [x] policies/MLP_policy.py
     - [x] make simple student policy.
-- [ ] infrastructure/rl_trainer_distillation.py
-    - [ ] load environment in atari wrapper.
-    - [ ] make logic for rolling out for student, 
-    - [ ] probing each state with teacher, 
+- [x] infrastructure/rl_trainer_distillation.py
+    - [x] load environment in atari wrapper.
+    - [x] make logic for rolling out for student, 
 - [x] scripts/run_distillation.py
     - make script to run policy distillation.
+- [ ] debug code.
+- [ ] verify distillation performance.
 
 ## TODOs from old repo
 HW5 CODEBASE TODOs:
