@@ -41,7 +41,7 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
         if self.discrete:
             print(f"input size {self.ob_dim}, output size {self.ac_dim}")
-            self.logits_na = ptu.build_mlp(input_size=self.ob_dim,
+            self.logits_na = ptu.build_mlp(input_size=self.ob_dim[0]*self.ob_dim[1], # build mlp input as width * height
                                            output_size=self.ac_dim,
                                            n_layers=self.n_layers,
                                            size=self.size)
