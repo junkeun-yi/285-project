@@ -106,7 +106,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     # Return the action distribution of the teacher policy on the given observation
-    def forward(self, observation: torch.FloatTensor)
+    def forward(self, observation: torch.FloatTensor):
         obs = observation
 
         action_dist = self.model.policy.get_distribution(
