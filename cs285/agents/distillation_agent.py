@@ -41,9 +41,9 @@ class DistillationAgent(DQNAgent):
 
         # TODO: utilize these parameters for exploration.
         # changed to ReplayBuffer because using add_rollouts and sample_recent_data
-        self.replay_buffer = MemoryOptimizedReplayBuffer(100000, 1, float_obs=True)
-        self.num_exploration_steps = agent_params['num_exploration_steps']
-        self.offline_exploitation = agent_params['offline_exploitation']
+        # self.replay_buffer = MemoryOptimizedReplayBuffer(100000, 1, float_obs=True)
+        # self.num_exploration_steps = agent_params['num_exploration_steps']
+        # self.offline_exploitation = agent_params['offline_exploitation']
 
         # self.exploitation_critic = CQLCritic(agent_params, self.optimizer_spec)
         # self.exploration_critic = DQNCritic(agent_params, self.optimizer_spec)

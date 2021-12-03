@@ -109,6 +109,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     def forward(self, observation: torch.FloatTensor):
         obs = observation
 
+        # action_dist = self.model.policy.get_distribution(ptu.from_numpy(obs))
         action_dist = self.model.policy.get_distribution(
             self.model.policy.obs_to_tensor(obs)[0])
         return action_dist

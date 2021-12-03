@@ -172,23 +172,29 @@ class RL_Trainer(object):
             self.total_envsteps += envsteps_this_batch
 
             # train agent (using sampled data from replay buffer)
-            if itr % print_period == 0:
+            # if itr % print_period == 0:
+            #     print("\nTraining agent...")
+            # all_logs = self.train_agent()
+            # TODO: validate below if statement
+            all_logs = []
+            if itr > 0 and itr % self.params['batch_size'] == 0:
                 print("\nTraining agent...")
-            all_logs = self.train_agent()
+                all_logs = self.train_agent()
 
             # Log densities and output trajectories
             # TODO: make sure we can use later
             if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
                 self.dump_density_graphs(itr)
 
+            # TODO: validate below if statement
             # log/save
-            if self.logvideo or self.logmetrics:
+            if itr > 0 and itr%self.params['batch_size']==0 and (self.logvideo or self.logmetrics):
                 # perform logging
                 print('\nBeginning logging procedure...')
                 if isinstance(self.agent, ExplorationOrExploitationAgent):
                     self.perform_dqn_logging(all_logs)
                 else:
-                    self.perform_logging(itr, paths, eval_policy, train_video_paths, all_logs)
+                    self.perform_logging(itr, paths, eval_policy, train_video_paths, np.array(all_logs))
 
                 if self.params['save_params']:
                     self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
