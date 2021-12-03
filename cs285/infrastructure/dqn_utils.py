@@ -118,6 +118,26 @@ def get_env_kwargs(env_name):
         }
         kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['num_timesteps'])
 
+    elif 'Freeway' in env_name:
+        def freeway_empty_wrapper(env):
+            return env
+        kwargs = {
+            'learning_starts': 50000,
+            'target_update_freq': 10000,
+            'replay_buffer_size': int(1e6),
+            'num_timesteps': int(2e8),
+            'q_func': create_atari_q_network,
+            'learning_freq': 4,
+            'grad_norm_clipping': 10,
+            'input_shape': (84, 84, 1),
+            'env_wrappers': freeway_empty_wrapper,
+            'frame_history_len': 4,
+            'gamma': 0.99,
+        }
+        kwargs['optimizer_spec'] = atari_optimizer(kwargs['num_timesteps'])
+        kwargs['exploration_schedule'] = atari_exploration_schedule(kwargs['num_timesteps'])
+        
+
     else:
         raise NotImplementedError
 
@@ -212,6 +232,15 @@ def pointmass_optimizer():
         learning_rate_schedule=lambda epoch: 1e-3,  # keep init learning rate
     )
 
+def freeway_optimizer():
+    return OptimizerSpec(
+        constructor=optim.Adam,
+        optim_kwargs=dict(
+            lr=1,
+        ),
+        learning_rate_schedule=lambda epoch: 1e-3,  # keep init learning rate
+    )
+
 def lander_optimizer():
     return OptimizerSpec(
         constructor=optim.Adam,
@@ -230,6 +259,13 @@ def lander_exploration_schedule(num_timesteps):
         ], outside_value=0.02
     )
 
+def freeway_exploration_schedule(num_timesteps):
+    return PiecewiseSchedule(
+        [
+            (0, 1),
+            (num_timesteps * 0.1, 0.02),
+        ], outside_value=0.02
+    )
 
 def sample_n_unique(sampling_f, n):
     """Helper function. Given a function `sampling_f` that returns

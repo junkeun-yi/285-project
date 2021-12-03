@@ -15,7 +15,7 @@ import numpy as np
 import cs285.infrastructure.pytorch_util as ptu
 
 
-class DistillationAgent(BaseAgent):
+class DistillationAgent(DQNAgent):
     def __init__(self, env, agent_params):
         super(DistillationAgent, self).__init__(env, agent_params)
         
@@ -29,7 +29,7 @@ class DistillationAgent(BaseAgent):
         self.teacher.load(self.agent_params['teacher_chkpt'])
 
         # setup
-        self.actor = MLPPolicyDistillationStudent(
+        self.student = MLPPolicyDistillationStudent(
             self.agent_params['ac_dim'],
             self.agent_params['ob_dim'],
             self.agent_params['n_layers'],
@@ -40,6 +40,7 @@ class DistillationAgent(BaseAgent):
         )
 
         # TODO: utilize these parameters for exploration.
+        # changed to ReplayBuffer because using add_rollouts and sample_recent_data
         self.replay_buffer = MemoryOptimizedReplayBuffer(100000, 1, float_obs=True)
         self.num_exploration_steps = agent_params['num_exploration_steps']
         self.offline_exploitation = agent_params['offline_exploitation']
@@ -51,7 +52,7 @@ class DistillationAgent(BaseAgent):
         self.explore_weight_schedule = agent_params['explore_weight_schedule']
         self.exploit_weight_schedule = agent_params['exploit_weight_schedule']
 
-        self.actor = ArgMaxPolicy(self.exploration_critic)
+        self.student = ArgMaxPolicy(self.exploration_critic)
         self.eval_policy = ArgMaxPolicy(self.exploitation_critic)
         self.exploit_rew_shift = agent_params['exploit_rew_shift']
         self.exploit_rew_scale = agent_params['exploit_rew_scale']
@@ -62,10 +63,10 @@ class DistillationAgent(BaseAgent):
         log = {}
 
         # retrieve teacher's action logits on observations
-        ac_logits_teacher = self.teacher.get_act_logits(ob_no)
+        ac_logits_teacher = self.teacher.get_act_logits(np.array(ob_no))
 
         # update the student
-        kl_loss = self.actor.update(ob_no, ac_na, ac_logits_teacher)
+        kl_loss = self.student.update(ob_no, ac_na, ac_logits_teacher)
 
         log['kl_div_loss'] = kl_loss
 
@@ -76,9 +77,9 @@ class DistillationAgent(BaseAgent):
         log = {}
 
         if self.t > self.num_exploration_steps:
-            # TODO: After exploration is over, set the actor to optimize the extrinsic critic
+            # TODO: After exploration is over, set the student to optimize the extrinsic critic
             #HINT: Look at method ArgMaxPolicy.set_critic
-            self.actor.set_critic(self.exploitation_critic)
+            self.student.set_critic(self.exploitation_critic)
 
         if (self.t > self.learning_starts
                 and self.t % self.learning_freq == 0
@@ -142,30 +143,5 @@ class DistillationAgent(BaseAgent):
         self.t += 1
         return log
 
-
-    def step_env(self):
-        """
-            Step the env and store the transition
-            At the end of this block of code, the simulator should have been
-            advanced one step, and the replay buffer should contain one more transition.
-            Note that self.last_obs must always point to the new latest observation.
-        """
-        if (not self.offline_exploitation) or (self.t <= self.num_exploration_steps):
-            self.replay_buffer_idx = self.replay_buffer.store_frame(self.last_obs)
-
-        perform_random_action = np.random.random() < self.eps or self.t < self.learning_starts
-
-        if perform_random_action:
-            action = self.env.action_space.sample()
-        else:
-            processed = self.replay_buffer.encode_recent_observation()
-            action = self.actor.get_action(processed)
-
-        next_obs, reward, done, info = self.env.step(action)
-        self.last_obs = next_obs.copy()
-
-        if (not self.offline_exploitation) or (self.t <= self.num_exploration_steps):
-            self.replay_buffer.store_effect(self.replay_buffer_idx, action, reward, done)
-
-        if done:
-            self.last_obs = self.env.reset()
+############################################################
+############################################################

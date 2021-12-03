@@ -74,10 +74,16 @@ def main():
 
     parser.add_argument('--use_boltzmann', action='store_true')
 
+    # for DQNAgent
+    parser.add_argument('--n_layers', type=int, default=4)
+    parser.add_argument('--size', type=int, default=512)
+    parser.add_argument('--learning_rate', type=int, default=1e-4)
+    parser.add_argument('--n_actions', type=int, default=3)
+
     # Distillation parameters
     # Teacher
     parser.add_argument('--distill_policy', type=str, default='CnnPolicy')
-    parser.add_argument('--teacher_chkpt', type=str, default='teachers/FreewayNoFrameskip-v0.zip')
+    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/FreewayNoFrameskip-v0.zip')
 
     # Student
     parser.add_argument('--temperature', type=int, default=0.01)
@@ -98,14 +104,18 @@ def main():
     ### CREATE DIRECTORY FOR LOGGING
     ##################################
 
-    if params['env_name']=='PointmassEasy-v0':
-        params['ep_len']=50
-    if params['env_name']=='PointmassMedium-v0':
-        params['ep_len']=150
-    if params['env_name']=='PointmassHard-v0':
-        params['ep_len']=100
-    if params['env_name']=='PointmassVeryHard-v0':
-        params['ep_len']=200
+    # if params['env_name']=='PointmassEasy-v0':
+    #     params['ep_len']=50
+    # if params['env_name']=='PointmassMedium-v0':
+    #     params['ep_len']=150
+    # if params['env_name']=='PointmassHard-v0':
+    #     params['ep_len']=100
+    # if params['env_name']=='PointmassVeryHard-v0':
+    #     params['ep_len']=200
+    
+    # NOTE: had to change this for each environment
+    if params['env_name']=='FreewayNoFrameskip-v0':
+        params['ep_len']=128
     
     if params['use_rnd']:
         params['explore_weight_schedule'] = PiecewiseSchedule([(0,1), (params['num_exploration_steps'], 0)], outside_value=0.0)

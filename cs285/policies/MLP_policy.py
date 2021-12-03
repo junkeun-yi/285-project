@@ -40,6 +40,7 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         self.nn_baseline = nn_baseline
 
         if self.discrete:
+            print(f"input size {self.ob_dim}, output size {self.ac_dim}")
             self.logits_na = ptu.build_mlp(input_size=self.ob_dim,
                                            output_size=self.ac_dim,
                                            n_layers=self.n_layers,
@@ -142,11 +143,11 @@ class MLPPolicyDistillationStudent(MLPPolicy):
                  learning_rate=1e-4,
                  training=True,
                  nn_baseline=False,
-                 teamperature=0.01,
+                 temperature=0.01,
                  **kwargs,
                  ):
         super().__init__(ac_dim, ob_dim, n_layers, size, discrete, learning_rate, training, nn_baseline, **kwargs)
-        self.T = teamperature
+        self.T = temperature
 
     def update(self, observations, actions, act_logits_teacher, adv_n=None):
         if adv_n is None:

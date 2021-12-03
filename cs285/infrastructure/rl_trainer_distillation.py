@@ -24,6 +24,8 @@ from cs285.infrastructure.dqn_utils import (
 #register all of our envs
 import cs285.envs
 
+from stable_baselines3.common.env_util import make_atari_env
+
 # how many rollouts to save as videos to tensorboard
 MAX_NVIDEO = 2
 MAX_VIDEO_LEN = 40 # we overwrite this in the code below
@@ -55,29 +57,34 @@ class RL_Trainer(object):
         #############
 
         # Make the gym environment
-        register_custom_envs()
-        # TODO: make environment as atari environment.
-        self.env = gym.make(self.params['env_name'])
-        self.eval_env = gym.make(self.params['env_name'])
-        if not ('pointmass' in self.params['env_name']):
-            import matplotlib
-            matplotlib.use('Agg')
-            self.env.set_logdir(self.params['logdir'] + '/expl_')
-            self.eval_env.set_logdir(self.params['logdir'] + '/eval_')
+        # register_custom_envs()
+        self.env = make_atari_env(self.params['env_name'])
+        self.eval_env = make_atari_env(self.params['env_name'])
+        # TODO: make sure logging is done correctly
+        # if not ('pointmass' in self.params['env_name']):
+        #     import matplotlib
+        #     matplotlib.use('Agg')
+        #     self.env.set_logdir(self.params['logdir'] + '/expl_')
+        #     self.eval_env.set_logdir(self.params['logdir'] + '/eval_')
             
-        if 'env_wrappers' in self.params:
-            # These operations are currently only for Atari envs
-            self.env = wrappers.Monitor(self.env, os.path.join(self.params['logdir'], "gym"), force=True)
-            self.eval_env = wrappers.Monitor(self.eval_env, os.path.join(self.params['logdir'], "gym"), force=True)
-            self.env = params['env_wrappers'](self.env)
-            self.eval_env = params['env_wrappers'](self.eval_env)
-            self.mean_episode_reward = -float('nan')
-            self.best_mean_episode_reward = -float('inf')
-        if 'non_atari_colab_env' in self.params and self.params['video_log_freq'] > 0:
-            self.env = wrappers.Monitor(self.env, os.path.join(self.params['logdir'], "gym"), write_upon_reset=True)#, force=True)
-            self.eval_env = wrappers.Monitor(self.eval_env, os.path.join(self.params['logdir'], "gym"), write_upon_reset=True)
-            self.mean_episode_reward = -float('nan')
-            self.best_mean_episode_reward = -float('inf')
+        # if 'env_wrappers' in self.params:
+        #     # These operations are currently only for Atari envs
+        #     self.env = wrappers.Monitor(self.env, os.path.join(self.params['logdir'], "gym"), force=True)
+        #     self.eval_env = wrappers.Monitor(self.eval_env, os.path.join(self.params['logdir'], "gym"), force=True)
+        #     self.env = params['env_wrappers'](self.env)
+        #     self.eval_env = params['env_wrappers'](self.eval_env)
+        #     self.mean_episode_reward = -float('nan')
+        #     self.best_mean_episode_reward = -float('inf')
+        # if 'non_atari_colab_env' in self.params and self.params['video_log_freq'] > 0:
+        #     self.env = wrappers.Monitor(self.env, os.path.join(self.params['logdir'], "gym"), write_upon_reset=True)#, force=True)
+        #     self.eval_env = wrappers.Monitor(self.eval_env, os.path.join(self.params['logdir'], "gym"), write_upon_reset=True)
+        #     self.mean_episode_reward = -float('nan')
+        #     self.best_mean_episode_reward = -float('inf')
+
+        # initial status
+        self.mean_episode_reward = -float('nan')
+        self.best_mean_episode_reward = -float('inf')
+
         self.env.seed(seed)
         self.eval_env.seed(seed)
 
@@ -96,6 +103,8 @@ class RL_Trainer(object):
         # Observation and action sizes
 
         ob_dim = self.env.observation_space.shape if img else self.env.observation_space.shape[0]
+        # make observation space size to be int
+        ob_dim = self.env.observation_space.shape[0]*self.env.observation_space.shape[1]
         ac_dim = self.env.action_space.n if discrete else self.env.action_space.shape[0]
         self.params['agent_params']['ac_dim'] = ac_dim
         self.params['agent_params']['ob_dim'] = ob_dim
@@ -105,8 +114,8 @@ class RL_Trainer(object):
             self.fps = 1/self.env.model.opt.timestep
         elif 'env_wrappers' in self.params:
             self.fps = 30 # This is not actually used when using the Monitor wrapper
-        elif 'video.frames_per_second' in self.env.env.metadata.keys():
-            self.fps = self.env.env.metadata['video.frames_per_second']
+        elif 'video.frames_per_second' in self.env.envs[0].metadata.keys():
+            self.fps = self.env.envs[0].metadata['video.frames_per_second']
         else:
             self.fps = 10
 
@@ -157,33 +166,12 @@ class RL_Trainer(object):
                 self.logmetrics = False
 
             # collect trajectories, to be used for training
-            # TODO: resolve whether to use the this if statement
-            if isinstance(self.agent, ExplorationOrExploitationAgent):
-                self.agent.step_env()
-                envsteps_this_batch = 1
-                train_video_paths = None
-                paths = None
-            else:
-                use_batchsize = self.params['batch_size']
-                if itr==0:
-                    use_batchsize = self.params['batch_size_initial']
-                paths, envsteps_this_batch, train_video_paths = (
-                    self.collect_training_trajectories(
-                        itr, initial_expertdata, collect_policy, use_batchsize)
-                )
-
-            # TODO: resolve everything below
-            if (not self.agent.offline_exploitation) or (self.agent.t <= self.agent.num_exploration_steps):
-                self.total_envsteps += envsteps_this_batch
-
-            # relabel the collected obs with actions from a provided expert policy
-            if relabel_with_expert and itr>=start_relabel_with_expert:
-                paths = self.do_relabel_with_expert(expert_policy, paths)
-
-            # add collected data to replay buffer
-            if isinstance(self.agent, ExplorationOrExploitationAgent):
-                if (not self.agent.offline_exploitation) or (self.agent.t <= self.agent.num_exploration_steps):
-                    self.agent.add_to_replay_buffer(paths)
+            # Adapted from hw3 DQN for atari environment stepping.
+            self.agent.step_env()  # this adds to the replay buffer in the agent
+            envsteps_this_batch = 1
+            train_video_paths = None
+            paths = None
+            self.total_envsteps += envsteps_this_batch
 
             # train agent (using sampled data from replay buffer)
             if itr % print_period == 0:
@@ -251,13 +239,6 @@ class RL_Trainer(object):
             train_log = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
         return all_logs
-
-    ####################################
-    ####################################
-
-    def do_relabel_with_expert(self, expert_policy, paths):
-        raise NotImplementedError
-        # hw1/hw2, can ignore it b/c it's not used for this hw
 
     ####################################
     ####################################
