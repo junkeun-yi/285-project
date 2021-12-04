@@ -83,7 +83,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
     ##################################
 
-    def get_act_logits(self, obs: torch.FloatTensor):
+    def get_act_logits(self, obs: np.ndarray):
         action_dist = self.forward(obs)
         return action_dist.distribution.logits.detach()
 
