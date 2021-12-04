@@ -32,6 +32,7 @@ arguments include:
 - [x] scripts/run_distillation.py
     - make script to run policy distillation.
 - [ ] debug code.
+    - Resolve path issue for training logging (see FIXME [Path Issue] in code)
 - [ ] verify distillation performance.
 
 ## TODOs from old repo
