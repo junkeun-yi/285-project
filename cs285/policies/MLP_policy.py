@@ -152,7 +152,9 @@ class MLPPolicyDistillationStudent(MLPPolicy):
         # query the policy with observation(s) to get selected action(s)
     def get_action(self, obs: np.ndarray) -> np.ndarray:
         observation = ptu.from_numpy(obs)
-        action_distribution = self(observation.view(observation.shape[0], -1))
+        # action_distribution = self(observation.view(observation.shape[0], -1))
+        observation = observation.view(-1)
+        action_distribution = self(observation)
         action = action_distribution.sample()  # don't bother with rsample
         return ptu.to_numpy(action)
 

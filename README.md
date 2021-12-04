@@ -33,8 +33,10 @@ arguments include:
     - [x] make logic for rolling out for student, 
 - [x] scripts/run_distillation.py
     - make script to run policy distillation.
-- [ ] debug code.
+- [x] debug code.
     - Resolve path issue for training logging (see FIXME [Path Issue] in code)
+- [ ] log useful statistics
+    - Adapt logging to see if it's actually logging useful data
 - [ ] verify distillation performance.
 
 ## TODOs from old repo

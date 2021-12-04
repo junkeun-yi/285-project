@@ -185,6 +185,7 @@ class RL_Trainer(object):
                 print("\nTraining agent...")
                 all_logs = self.train_agent()
 
+                # log / save
                 if (self.logvideo or self.logmetrics):
                     print('\nBeginning logging procedure...')
                     self.perform_dqn_logging(np.array(all_logs))
