@@ -18,6 +18,8 @@ import cs285.infrastructure.pytorch_util as ptu
 class DistillationAgent(DQNAgent):
     def __init__(self, env, agent_params):
         super(DistillationAgent, self).__init__(env, agent_params)
+        self.env = env
+        self.agent_params = agent_params
         
         # Retrieve teacher policy
         self.teacher = DistillationTeacherPolicy(
@@ -72,6 +74,7 @@ class DistillationAgent(DQNAgent):
         log['kl_div_loss'] = kl_loss
 
         return log
+
 
 ############################################################
 ############################################################

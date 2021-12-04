@@ -165,6 +165,7 @@ class RL_Trainer(object):
 
             # collect trajectories, to be used for training
             # Adapted from hw3 DQN for atari environment stepping.
+            # FIXME [Path Issue]: Resolve paths issue (pls walk through execution of homework code)
             self.agent.step_env()  # this adds to the replay buffer in the agent
             envsteps_this_batch = 1
             train_video_paths = None
@@ -191,10 +192,7 @@ class RL_Trainer(object):
             if itr > 0 and itr%self.params['batch_size']==0 and (self.logvideo or self.logmetrics):
                 # perform logging
                 print('\nBeginning logging procedure...')
-                if isinstance(self.agent, ExplorationOrExploitationAgent):
-                    self.perform_dqn_logging(all_logs)
-                else:
-                    self.perform_logging(itr, paths, eval_policy, train_video_paths, np.array(all_logs))
+                self.perform_logging(itr, paths, eval_policy, train_video_paths, np.array(all_logs))
 
                 if self.params['save_params']:
                     self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
@@ -213,6 +211,7 @@ class RL_Trainer(object):
             envsteps_this_batch: the sum over the numbers of environment steps in paths
             train_video_paths: paths which also contain videos for visualization purposes
         """
+        # This if statement does nothing, it is old
         if itr == 0:
             if initial_expertdata is not None:
                 paths = pickle.load(open(self.params['expert_data'], 'rb'))
@@ -323,13 +322,13 @@ class RL_Trainer(object):
         # save eval metrics
         if self.logmetrics:
             # returns, for logging
-            # FIXME: Fix Paths (see rl_train collect trajectories. pls verify code structure by running hw)
+            # FIXME [PATH Issue]: Uncomment
             # train_returns = [path["reward"].sum() for path in paths]
             eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
 
             # episode lengths, for logging
-            # FIXME: Uncomment (paths fix)
-            # train_ep_lens = [len(path["reward"]) for path in paths]
+            # FIXME [PATH Issue]: Uncomment
+            train_ep_lens = [len(path["reward"]) for path in paths]
             eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
 
             # decide what to log
@@ -340,7 +339,7 @@ class RL_Trainer(object):
             logs["Eval_MinReturn"] = np.min(eval_returns)
             logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
 
-            # FIXME: Uncomment (paths fix)
+            # FIXME [PATH Issue]: Uncomment
             # logs["Train_AverageReturn"] = np.mean(train_returns)
             # logs["Train_StdReturn"] = np.std(train_returns)
             # logs["Train_MaxReturn"] = np.max(train_returns)
@@ -351,10 +350,11 @@ class RL_Trainer(object):
             logs["TimeSinceStart"] = time.time() - self.start_time
             logs.update(last_log)
 
-            # FIXME: Uncomment (paths fix)
-            # if itr == 0:
-            #     self.initial_return = np.mean(train_returns)
-            self.initial_return = 0.0 #FIXME: Remove <- (dummy value)
+
+            if itr == 0:
+                # FIXME [PATH Issue]: Uncomment np.mean
+                self.initial_return = 0.#np.mean(train_returns)
+
             logs["Initial_DataCollection_AverageReturn"] = self.initial_return
 
             # perform the logging
