@@ -44,6 +44,7 @@ class DistillationAgent(DQNAgent):
         )
 
         self.eval_policy = self.actor
+        # self.eval_policy = self.teacher
 
         # TODO: utilize these parameters for exploration.
         # changed to ReplayBuffer because using add_rollouts and sample_recent_data
@@ -65,16 +66,25 @@ class DistillationAgent(DQNAgent):
 
     # Training function for naive distillation
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
+
         log = {}
+        if (self.t > self.learning_starts
+                and self.t % self.learning_freq == 0
+                and self.replay_buffer.can_sample(self.batch_size)
+        ):
 
-        # retrieve teacher's action logits on observations
-        ac_logits_teacher = self.teacher.get_act_logits(np.array(ob_no))
+            # retrieve teacher's action logits on observations
+            ac_logits_teacher = self.teacher.get_act_logits(np.array(ob_no))
+            # print(ac_logits_teacher)
 
-        # update the student
-        kl_loss = self.actor.update(ob_no, ac_na, ac_logits_teacher)
+            # update the student
+            kl_loss = self.actor.update(ob_no, ac_na, ac_logits_teacher)
 
-        log['kl_div_loss'] = kl_loss
+            log['kl_div_loss'] = kl_loss
 
+            self.num_param_updates += 1
+
+        self.t += 1
         return log
 
 
