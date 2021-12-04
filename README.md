@@ -37,6 +37,8 @@ arguments include:
     - Resolve path issue for training logging (see FIXME [Path Issue] in code)
 - [ ] log useful statistics
     - Adapt logging to see if it's actually logging useful data
+- [ ] don't do epsilon greedy and learn immediately
+    - figure out why only training after 2048 timesteps
 - [ ] verify distillation performance.
 
 ## TODOs from old repo
