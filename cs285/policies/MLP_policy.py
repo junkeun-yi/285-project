@@ -149,8 +149,15 @@ class MLPPolicyDistillationStudent(MLPPolicy):
         super().__init__(ac_dim, ob_dim, n_layers, size, discrete, learning_rate, training, nn_baseline, **kwargs)
         self.T = temperature
 
+        # query the policy with observation(s) to get selected action(s)
+    def get_action(self, obs: np.ndarray) -> np.ndarray:
+        observation = ptu.from_numpy(obs)
+        action_distribution = self(observation.view(observation.shape[0], -1))
+        action = action_distribution.sample()  # don't bother with rsample
+        return ptu.to_numpy(action)
+
     def update(self, observations, actions, act_logits_teacher, adv_n=None):
-        if adv_n is None:
+        if adv_n is not None:
             assert False
         if isinstance(observations, np.ndarray):
             observations = ptu.from_numpy(observations)
@@ -158,8 +165,8 @@ class MLPPolicyDistillationStudent(MLPPolicy):
             actions = ptu.from_numpy(actions)
         if isinstance(adv_n, np.ndarray):
             adv_n = ptu.from_numpy(adv_n)
-
-        action_dist = self.forward(observations)
+        
+        action_dist = self.forward(observations.view(observations.shape[0],-1))
         act_logits_student = action_dist.logits
         
         kl_loss = KLDivLoss(reduction='batchmean')

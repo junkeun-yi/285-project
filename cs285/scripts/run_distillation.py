@@ -33,8 +33,8 @@ class Distill_Trainer(object):
     def run_training_loop(self):
         self.rl_trainer.run_training_loop(
             self.agent_params['num_timesteps'],
-            collect_policy = self.rl_trainer.agent.student,  # TODO check these
-            eval_policy = self.rl_trainer.agent.student,
+            collect_policy = self.rl_trainer.agent.actor,  # TODO check these
+            eval_policy = self.rl_trainer.agent.actor,
             )
 
 def main():
@@ -93,6 +93,7 @@ def main():
 
     # convert to dictionary
     params = vars(args)
+    print(params["teacher_chkpt"])
     params['double_q'] = True
     params['num_agent_train_steps_per_iter'] = 1
     params['num_critic_updates_per_agent_update'] = 1
@@ -101,6 +102,7 @@ def main():
     params['num_timesteps'] = 50000
     params['learning_starts'] = 2000
     params['eps'] = 0.2
+    params['frame_history_len'] = 1 
     ##################################
     ### CREATE DIRECTORY FOR LOGGING
     ##################################

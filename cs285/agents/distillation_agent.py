@@ -15,9 +15,9 @@ import numpy as np
 import cs285.infrastructure.pytorch_util as ptu
 
 
-class DistillationAgent(BaseAgent):
+class DistillationAgent(DQNAgent):
     def __init__(self, env, agent_params):
-        super(DistillationAgent, self).__init__()
+        super(DistillationAgent, self).__init__(env, agent_params)
         self.env = env
         self.agent_params = agent_params
         
@@ -28,10 +28,12 @@ class DistillationAgent(BaseAgent):
             # TODO: add teacher kwargs
             # *self.agent_params['teacher_kwargs'],
         )
+
         self.teacher.load(self.agent_params['teacher_chkpt'])
 
         # setup
-        self.student = MLPPolicyDistillationStudent(
+        self.critic = None
+        self.actor = MLPPolicyDistillationStudent(
             self.agent_params['ac_dim'],
             self.agent_params['ob_dim'],
             self.agent_params['n_layers'],
@@ -41,11 +43,8 @@ class DistillationAgent(BaseAgent):
             temperature=self.agent_params['temperature']
         )
 
-        self.replay_buffer = ReplayBuffer(1000000)
-
         # TODO: utilize these parameters for exploration.
         # changed to ReplayBuffer because using add_rollouts and sample_recent_data
-        # self.replay_buffer = MemoryOptimizedReplayBuffer(100000, 1, float_obs=True)
         # self.num_exploration_steps = agent_params['num_exploration_steps']
         # self.offline_exploitation = agent_params['offline_exploitation']
 
@@ -56,7 +55,7 @@ class DistillationAgent(BaseAgent):
         # self.explore_weight_schedule = agent_params['explore_weight_schedule']
         # self.exploit_weight_schedule = agent_params['exploit_weight_schedule']
 
-        # self.student = ArgMaxPolicy(self.exploration_critic)
+        # self.actor = ArgMaxPolicy(self.exploration_critic)
         # self.eval_policy = ArgMaxPolicy(self.exploitation_critic)
         # self.exploit_rew_shift = agent_params['exploit_rew_shift']
         # self.exploit_rew_scale = agent_params['exploit_rew_scale']
@@ -70,17 +69,12 @@ class DistillationAgent(BaseAgent):
         ac_logits_teacher = self.teacher.get_act_logits(np.array(ob_no))
 
         # update the student
-        kl_loss = self.student.update(ob_no, ac_na, ac_logits_teacher)
+        kl_loss = self.actor.update(ob_no, ac_na, ac_logits_teacher)
 
         log['kl_div_loss'] = kl_loss
 
         return log
 
-    def add_to_replay_buffer(self, paths):
-        self.replay_buffer.add_rollouts(paths)
-
-    def sample(self, batch_size):
-        return self.replay_buffer.sample_recent_data(batch_size, concat_rew=False)
 
 ############################################################
 ############################################################
@@ -92,7 +86,7 @@ class DistillationAgent(BaseAgent):
     #     if self.t > self.num_exploration_steps:
     #         # TODO: After exploration is over, set the student to optimize the extrinsic critic
     #         #HINT: Look at method ArgMaxPolicy.set_critic
-    #         self.student.set_critic(self.exploitation_critic)
+    #         self.actor.set_critic(self.exploitation_critic)
 
     #     if (self.t > self.learning_starts
     #             and self.t % self.learning_freq == 0

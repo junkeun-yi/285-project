@@ -163,28 +163,29 @@ class RL_Trainer(object):
             else:
                 self.logmetrics = False
 
-            # collect trajectories to be used for training
-            training_returns = self.collect_training_trajectories(itr, None, collect_policy, 
-                self.params['batch_size'])
-            paths, envsteps_this_batch, train_video_paths = training_returns
+            # collect trajectories, to be used for training
+            # Adapted from hw3 DQN for atari environment stepping.
+            # FIXME [Path Issue]: Resolve paths issue (pls walk through execution of homework code)
+            self.agent.step_env()  # this adds to the replay buffer in the agent
+            envsteps_this_batch = 1
+            train_video_paths = None
+            paths = None
             self.total_envsteps += envsteps_this_batch
-
-            self.agent.add_to_replay_buffer(paths)
 
             # train agent (using sampled data from replay buffer)
             # if itr % print_period == 0:
             #     print("\nTraining agent...")
             # all_logs = self.train_agent()
             # TODO: validate below if statement
-            # all_logs = []
-            # if itr > 0 and itr % self.params['batch_size'] == 0:
-            print("\nTraining agent...")
-            all_logs = self.train_agent()
+            all_logs = []
+            if itr > 0 and itr % self.params['batch_size'] == 0:
+                print("\nTraining agent...")
+                all_logs = self.train_agent()
 
             # Log densities and output trajectories
             # TODO: make sure we can use later
-            if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
-                self.dump_density_graphs(itr)
+            # if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
+            #     self.dump_density_graphs(itr)
 
             # TODO: validate below if statement
             # log/save
@@ -321,10 +322,12 @@ class RL_Trainer(object):
         # save eval metrics
         if self.logmetrics:
             # returns, for logging
-            train_returns = [path["reward"].sum() for path in paths]
+            # FIXME [PATH Issue]: Uncomment
+            # train_returns = [path["reward"].sum() for path in paths]
             eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
 
             # episode lengths, for logging
+            # FIXME [PATH Issue]: Uncomment
             train_ep_lens = [len(path["reward"]) for path in paths]
             eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
 
@@ -336,18 +339,22 @@ class RL_Trainer(object):
             logs["Eval_MinReturn"] = np.min(eval_returns)
             logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
 
-            logs["Train_AverageReturn"] = np.mean(train_returns)
-            logs["Train_StdReturn"] = np.std(train_returns)
-            logs["Train_MaxReturn"] = np.max(train_returns)
-            logs["Train_MinReturn"] = np.min(train_returns)
-            logs["Train_AverageEpLen"] = np.mean(train_ep_lens)
+            # FIXME [PATH Issue]: Uncomment
+            # logs["Train_AverageReturn"] = np.mean(train_returns)
+            # logs["Train_StdReturn"] = np.std(train_returns)
+            # logs["Train_MaxReturn"] = np.max(train_returns)
+            # logs["Train_MinReturn"] = np.min(train_returns)
+            # logs["Train_AverageEpLen"] = np.mean(train_ep_lens)
 
             logs["Train_EnvstepsSoFar"] = self.total_envsteps
             logs["TimeSinceStart"] = time.time() - self.start_time
             logs.update(last_log)
 
+
             if itr == 0:
-                self.initial_return = np.mean(train_returns)
+                # FIXME [PATH Issue]: Uncomment np.mean
+                self.initial_return = 0.#np.mean(train_returns)
+
             logs["Initial_DataCollection_AverageReturn"] = self.initial_return
 
             # perform the logging
