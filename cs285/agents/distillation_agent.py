@@ -43,6 +43,8 @@ class DistillationAgent(DQNAgent):
             temperature=self.agent_params['temperature']
         )
 
+        self.eval_policy = self.actor
+
         # TODO: utilize these parameters for exploration.
         # changed to ReplayBuffer because using add_rollouts and sample_recent_data
         # self.num_exploration_steps = agent_params['num_exploration_steps']

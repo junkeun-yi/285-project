@@ -58,8 +58,10 @@ class RL_Trainer(object):
 
         # Make the gym environment
         # register_custom_envs()
-        self.env = make_atari_env(self.params['env_name'])
-        self.eval_env = make_atari_env(self.params['env_name'])
+        # originally make atari env returns a wrapper with list of envs.
+        # we only want one env, so pop to get the environment.
+        self.env = make_atari_env(self.params['env_name']).envs.pop()
+        self.eval_env = make_atari_env(self.params['env_name']).envs.pop()
         # TODO: make sure logging is done correctly
         # if not ('pointmass' in self.params['env_name']):
         #     import matplotlib
@@ -143,7 +145,8 @@ class RL_Trainer(object):
         self.total_envsteps = 0
         self.start_time = time.time()
 
-        print_period = 1000 if isinstance(self.agent, DistillationAgent) else 1
+        # print_period = 1000 if isinstance(self.agent, DistillationAgent) else 1
+        print_period = self.params['batch_size']
 
         for itr in range(n_iter):
             if itr % print_period == 0:
@@ -182,6 +185,13 @@ class RL_Trainer(object):
                 print("\nTraining agent...")
                 all_logs = self.train_agent()
 
+                if (self.logvideo or self.logmetrics):
+                    print('\nBeginning logging procedure...')
+                    self.perform_dqn_logging(np.array(all_logs))
+
+                    if self.params['save_params']:
+                        self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
+
             # Log densities and output trajectories
             # TODO: make sure we can use later
             # if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
@@ -189,13 +199,15 @@ class RL_Trainer(object):
 
             # TODO: validate below if statement
             # log/save
-            if itr > 0 and itr%self.params['batch_size']==0 and (self.logvideo or self.logmetrics):
-                # perform logging
-                print('\nBeginning logging procedure...')
-                self.perform_logging(itr, paths, eval_policy, train_video_paths, np.array(all_logs))
+            # if itr > 0 and itr%self.params['batch_size']==0 and (self.logvideo or self.logmetrics):
+            # # if itr > 0 and (self.logvideo or self.logmetrics):
+            #     # perform logging
+            #     print('\nBeginning logging procedure...')
+            #     # self.perform_logging(itr, paths, eval_policy, train_video_paths, np.array(all_logs))
+            #     self.perform_dqn_logging(np.array(all_logs))
 
-                if self.params['save_params']:
-                    self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
+            #     if self.params['save_params']:
+            #         self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
 
     ####################################
     ####################################
@@ -249,6 +261,7 @@ class RL_Trainer(object):
     def perform_dqn_logging(self, all_logs):
         last_log = all_logs[-1]
 
+        # episode_rewards = get_wrapper_by_name(self.env, "Monitor").get_episode_rewards()
         episode_rewards = get_wrapper_by_name(self.env, "Monitor").get_episode_rewards()
         if len(episode_rewards) > 0:
             self.mean_episode_reward = np.mean(episode_rewards[-100:])

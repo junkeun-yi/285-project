@@ -44,8 +44,6 @@ class DQNAgent(object):
             Note that self.last_obs must always point to the new latest observation.
         """        
 
-        # need to squeeze dim 0 because env gives shape (1, 84, 84, 1) but want (84, 84, 1)
-        self.last_obs = self.last_obs.squeeze(0)
         # print(self.last_obs.shape)
 
         # TODO store the latest observation ("frame") into the replay buffer
@@ -74,7 +72,7 @@ class DQNAgent(object):
         # HINT1: remember that self.last_obs must always point to the newest/latest observation
         # HINT2: remember the following useful function that you've seen before:
             #obs, reward, done, info = env.step(action)
-        self.last_obs, reward, done, info = self.env.step([action])
+        self.last_obs, reward, done, info = self.env.step(action)
 
         # TODO store the result of taking this action into the replay buffer
         # HINT1: see your replay buffer's `store_effect` function
