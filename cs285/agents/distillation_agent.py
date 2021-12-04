@@ -74,7 +74,7 @@ class DistillationAgent(DQNAgent):
         ):
 
             # retrieve teacher's action logits on observations
-            ac_logits_teacher = self.teacher.get_act_logits(np.array(ob_no))
+            ac_logits_teacher = self.teacher.get_act_logits(ob_no)
             # print(ac_logits_teacher)
 
             # update the student
