@@ -4,6 +4,8 @@
 2. `python -m atari_-_py.import_roms <path to roms>`
 3. `ale-import-roms --import-from-pkg atari_py.atari_roms`
 
+### Teacher was trained with python 3.8.10, Ubuntu 20.04.3 LTS (64-bit), in a python venv using requirements.txt
+
 # How to train a teacher.
 Run the below code with arguments that represent training timesteps \
 `python ppofreeway.py {your number of timesteps}` \
