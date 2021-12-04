@@ -163,23 +163,23 @@ class RL_Trainer(object):
             else:
                 self.logmetrics = False
 
-            # collect trajectories, to be used for training
-            # Adapted from hw3 DQN for atari environment stepping.
-            self.agent.step_env()  # this adds to the replay buffer in the agent
-            envsteps_this_batch = 1
-            train_video_paths = None
-            paths = None
+            # collect trajectories to be used for training
+            training_returns = self.collect_training_trajectories(itr, None, collect_policy, 
+                self.params['batch_size'])
+            paths, envsteps_this_batch, train_video_paths = training_returns
             self.total_envsteps += envsteps_this_batch
+
+            self.agent.add_to_replay_buffer(paths)
 
             # train agent (using sampled data from replay buffer)
             # if itr % print_period == 0:
             #     print("\nTraining agent...")
             # all_logs = self.train_agent()
             # TODO: validate below if statement
-            all_logs = []
-            if itr > 0 and itr % self.params['batch_size'] == 0:
-                print("\nTraining agent...")
-                all_logs = self.train_agent()
+            # all_logs = []
+            # if itr > 0 and itr % self.params['batch_size'] == 0:
+            print("\nTraining agent...")
+            all_logs = self.train_agent()
 
             # Log densities and output trajectories
             # TODO: make sure we can use later
@@ -191,10 +191,7 @@ class RL_Trainer(object):
             if itr > 0 and itr%self.params['batch_size']==0 and (self.logvideo or self.logmetrics):
                 # perform logging
                 print('\nBeginning logging procedure...')
-                if isinstance(self.agent, ExplorationOrExploitationAgent):
-                    self.perform_dqn_logging(all_logs)
-                else:
-                    self.perform_logging(itr, paths, eval_policy, train_video_paths, np.array(all_logs))
+                self.perform_logging(itr, paths, eval_policy, train_video_paths, np.array(all_logs))
 
                 if self.params['save_params']:
                     self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
@@ -213,6 +210,7 @@ class RL_Trainer(object):
             envsteps_this_batch: the sum over the numbers of environment steps in paths
             train_video_paths: paths which also contain videos for visualization purposes
         """
+        # This if statement does nothing, it is old
         if itr == 0:
             if initial_expertdata is not None:
                 paths = pickle.load(open(self.params['expert_data'], 'rb'))

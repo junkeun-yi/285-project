@@ -15,9 +15,11 @@ import numpy as np
 import cs285.infrastructure.pytorch_util as ptu
 
 
-class DistillationAgent(DQNAgent):
+class DistillationAgent(BaseAgent):
     def __init__(self, env, agent_params):
-        super(DistillationAgent, self).__init__(env, agent_params)
+        super(DistillationAgent, self).__init__()
+        self.env = env
+        self.agent_params = agent_params
         
         # Retrieve teacher policy
         self.teacher = DistillationTeacherPolicy(
@@ -38,6 +40,8 @@ class DistillationAgent(DQNAgent):
             learning_rate=self.agent_params['learning_rate'],
             temperature=self.agent_params['temperature']
         )
+
+        self.replay_buffer = ReplayBuffer(1000000)
 
         # TODO: utilize these parameters for exploration.
         # changed to ReplayBuffer because using add_rollouts and sample_recent_data
@@ -71,6 +75,12 @@ class DistillationAgent(DQNAgent):
         log['kl_div_loss'] = kl_loss
 
         return log
+
+    def add_to_replay_buffer(self, paths):
+        self.replay_buffer.add_rollouts(paths)
+
+    def sample(self, batch_size):
+        return self.replay_buffer.sample_recent_data(batch_size, concat_rew=False)
 
 ############################################################
 ############################################################

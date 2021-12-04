@@ -33,8 +33,8 @@ class Distill_Trainer(object):
     def run_training_loop(self):
         self.rl_trainer.run_training_loop(
             self.agent_params['num_timesteps'],
-            collect_policy = self.rl_trainer.agent.actor,
-            eval_policy = self.rl_trainer.agent.actor,
+            collect_policy = self.rl_trainer.agent.student,  # TODO check these
+            eval_policy = self.rl_trainer.agent.student,
             )
 
 def main():
@@ -83,7 +83,8 @@ def main():
     # Distillation parameters
     # Teacher
     parser.add_argument('--distill_policy', type=str, default='CnnPolicy')
-    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/FreewayNoFrameskip-v0.zip')
+    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/' + \
+        'FreewayNoFrameskip-v0-n_steps128-batch_size256-timesteps10000000.0-2021:12:03_07:07:59')
 
     # Student
     parser.add_argument('--temperature', type=int, default=0.01)
