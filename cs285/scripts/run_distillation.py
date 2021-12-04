@@ -83,7 +83,7 @@ def main():
     # Distillation parameters
     # Teacher
     parser.add_argument('--distill_policy', type=str, default='CnnPolicy')
-    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/FreewayNoFrameskip-v0.zip')
+    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/FreewayNoFrameskip-v0')
 
     # Student
     parser.add_argument('--temperature', type=int, default=0.01)
@@ -92,6 +92,7 @@ def main():
 
     # convert to dictionary
     params = vars(args)
+    print(params["teacher_chkpt"])
     params['double_q'] = True
     params['num_agent_train_steps_per_iter'] = 1
     params['num_critic_updates_per_agent_update'] = 1
@@ -100,6 +101,7 @@ def main():
     params['num_timesteps'] = 50000
     params['learning_starts'] = 2000
     params['eps'] = 0.2
+    params['frame_history_len'] = 1 
     ##################################
     ### CREATE DIRECTORY FOR LOGGING
     ##################################

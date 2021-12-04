@@ -183,8 +183,8 @@ class RL_Trainer(object):
 
             # Log densities and output trajectories
             # TODO: make sure we can use later
-            if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
-                self.dump_density_graphs(itr)
+            # if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
+            #     self.dump_density_graphs(itr)
 
             # TODO: validate below if statement
             # log/save
@@ -323,11 +323,13 @@ class RL_Trainer(object):
         # save eval metrics
         if self.logmetrics:
             # returns, for logging
-            train_returns = [path["reward"].sum() for path in paths]
+            # FIXME: Fix Paths (see rl_train collect trajectories. pls verify code structure by running hw)
+            # train_returns = [path["reward"].sum() for path in paths]
             eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
 
             # episode lengths, for logging
-            train_ep_lens = [len(path["reward"]) for path in paths]
+            # FIXME: Uncomment (paths fix)
+            # train_ep_lens = [len(path["reward"]) for path in paths]
             eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
 
             # decide what to log
@@ -338,18 +340,21 @@ class RL_Trainer(object):
             logs["Eval_MinReturn"] = np.min(eval_returns)
             logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
 
-            logs["Train_AverageReturn"] = np.mean(train_returns)
-            logs["Train_StdReturn"] = np.std(train_returns)
-            logs["Train_MaxReturn"] = np.max(train_returns)
-            logs["Train_MinReturn"] = np.min(train_returns)
-            logs["Train_AverageEpLen"] = np.mean(train_ep_lens)
+            # FIXME: Uncomment (paths fix)
+            # logs["Train_AverageReturn"] = np.mean(train_returns)
+            # logs["Train_StdReturn"] = np.std(train_returns)
+            # logs["Train_MaxReturn"] = np.max(train_returns)
+            # logs["Train_MinReturn"] = np.min(train_returns)
+            # logs["Train_AverageEpLen"] = np.mean(train_ep_lens)
 
             logs["Train_EnvstepsSoFar"] = self.total_envsteps
             logs["TimeSinceStart"] = time.time() - self.start_time
             logs.update(last_log)
 
-            if itr == 0:
-                self.initial_return = np.mean(train_returns)
+            # FIXME: Uncomment (paths fix)
+            # if itr == 0:
+            #     self.initial_return = np.mean(train_returns)
+            self.initial_return = 0.0 #FIXME: Remove <- (dummy value)
             logs["Initial_DataCollection_AverageReturn"] = self.initial_return
 
             # perform the logging

@@ -4,7 +4,7 @@ from gym.core import ObservationWrapper
 from torch import nn
 from torch.nn import functional as F
 from torch import optim
-
+import os
 import numpy as np
 import torch
 from torch import distributions
@@ -74,7 +74,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
     def load(self, filepath):
         # load stable_baselines3 model
-        self.model = PPO.load(filepath)
+        self.model = PPO.load(os.path.join(os.getcwd(), filepath))
 
     ##################################
 
@@ -103,7 +103,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
-        raise NotImplementedError
+        pass
 
     # Return the action distribution of the teacher policy on the given observation
     def forward(self, observation: torch.FloatTensor):
