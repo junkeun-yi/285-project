@@ -93,7 +93,6 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs
         else:
             observation = obs[None]
-        observation = ptu.from_numpy(observation)
         action_distribution = self(observation)
         action = action_distribution.sample()  # don't bother with rsample
         return ptu.to_numpy(action)
@@ -106,7 +105,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         pass
 
     # Return the action distribution of the teacher policy on the given observation
-    def forward(self, observation: torch.FloatTensor):
+    def forward(self, observation: np.ndarray):
         obs = observation
 
         # action_dist = self.model.policy.get_distribution(ptu.from_numpy(obs))
