@@ -102,7 +102,7 @@ class DistillationTeacherPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
-        pass
+        raise NotImplementedError
 
     # Return the action distribution of the teacher policy on the given observation
     def forward(self, observation: np.ndarray):

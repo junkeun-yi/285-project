@@ -13,6 +13,7 @@ from cs285.agents.base_agent import BaseAgent
 from .dqn_agent import DQNAgent
 import numpy as np
 import cs285.infrastructure.pytorch_util as ptu
+from cs285.exploration.icm_model import ICMModel
 
 
 class DistillationAgent(DQNAgent):
@@ -43,8 +44,12 @@ class DistillationAgent(DQNAgent):
             temperature=self.agent_params['temperature']
         )
 
-        self.eval_policy = self.actor
-        # self.eval_policy = self.teacher
+        # create exploration model for additional data gathering.
+        # using curiosity.
+        self.exploration_model = ICMModel(agent_params, self.optimizer_spec)
+
+        # self.eval_policy = self.actor
+        self.eval_policy = self.teacher
 
         # TODO: utilize these parameters for exploration.
         # changed to ReplayBuffer because using add_rollouts and sample_recent_data
@@ -79,6 +84,13 @@ class DistillationAgent(DQNAgent):
 
             # update the student
             kl_loss = self.actor.update(ob_no, ac_na, ac_logits_teacher)
+
+            # add curiosity update here.
+            # TODO: what to do with the curiosity model ? need to like integrate it to the original policy too.
+            # reward = a*distillation reward + b*exploration reward right?
+            # so distillation reward up if kl div high
+            # and exploration reward up if intrinsic reward high
+            # how to combine both ?
 
             log['kl_div_loss'] = kl_loss
 
