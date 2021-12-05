@@ -79,14 +79,17 @@ arguments include:
 - ☑ scripts/run_distillation.py
     - make script to run policy distillation.
 - ☑ debug code.
-    - Resolve path issue for training logging (see FIXME [Path Issue] in code)
-- ☐ log useful statistics
-    - Adapt logging to see if actually logging useful data
-- ☐ don't do epsilon greedy and learn immediately
-    - figure out why only training after 2048 timesteps
-- ☐ verify distillation performance.
-- ☐ get a list of tasks (from Burda paper). Evaluate relevance
+    - ☑ Resolve path issue for training logging (see FIXME [Path Issue] in code)
+- ☑ log useful statistics
+    - ☑ Adapt logging to see if actually logging useful data
+- ☐ ensure logging works for multiple environments
+- ☐ implement epsilon greedy schedule for distillation 
+- ☐ figure out why only training after 2048 timesteps
+- ☐ verify distillation performance
+- ☐ fix evaluation bug
 - ☐ add ICM to student (while allowing possiblity for choosing to use curiosity or not when training student)
+    - ☐ update ICM to use join encoder w/ distillation
     - ☐ adapt code to update on both distillation loss and icm loss jointly.
-- ☐ add intrinsic reward scheduling
+    - ☐ figure out weighted loss between ICM and distillation
 - ☐ train multiple level teachers (4e7, 1e7, 5e6, 2e6, 1e6, 5e5, 4e5, 3e5, 2.5e5, 2e5, 1.5e5, 1e5)
+- ☐ identify evaluation tasks
