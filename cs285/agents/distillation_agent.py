@@ -44,6 +44,7 @@ class DistillationAgent(DQNAgent):
         )
 
         self.eval_policy = self.actor
+        # self.eval_policy = self.teacher
 
         # TODO: utilize these parameters for exploration.
         # changed to ReplayBuffer because using add_rollouts and sample_recent_data
@@ -65,17 +66,51 @@ class DistillationAgent(DQNAgent):
 
     # Training function for naive distillation
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
+
         log = {}
+        if (self.t > self.learning_starts
+                and self.t % self.learning_freq == 0
+                and self.replay_buffer.can_sample(self.batch_size)
+        ):
 
-        # retrieve teacher's action logits on observations
-        ac_logits_teacher = self.teacher.get_act_logits(np.array(ob_no))
+            # retrieve teacher's action logits on observations
+            ac_logits_teacher = self.teacher.get_act_logits(ob_no)
+            # print(ac_logits_teacher)
 
-        # update the student
-        kl_loss = self.actor.update(ob_no, ac_na, ac_logits_teacher)
+            # update the student
+            kl_loss = self.actor.update(ob_no, ac_na, ac_logits_teacher)
 
-        log['kl_div_loss'] = kl_loss
+            log['kl_div_loss'] = kl_loss
 
+            self.num_param_updates += 1
+
+        self.t += 1
         return log
+
+    # overriden step env to not do epsilon greedy.
+    def step_env(self):
+        """
+            Step the env and store the transition
+            At the end of this block of code, the simulator should have been
+            advanced one step, and the replay buffer should contain one more transition.
+            Note that self.last_obs must always point to the new latest observation.
+        """
+        self.replay_buffer_idx = self.replay_buffer.store_frame(self.last_obs)
+
+        if self.t == 0:
+            # first action random to appease MemoryBuffer warnings
+            # TODO: is there a better way to do this ?
+            action = np.random.randint(self.num_actions)
+        else:
+            processed = self.replay_buffer.encode_recent_observation()
+            action = self.actor.get_action(processed)
+
+        self.last_obs, reward, done, info = self.env.step(action)
+
+        self.replay_buffer.store_effect(self.replay_buffer_idx, action, reward, done)
+
+        if done:
+            self.last_obs = self.env.reset()
 
 
 ############################################################

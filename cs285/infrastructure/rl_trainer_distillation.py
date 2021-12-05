@@ -176,22 +176,19 @@ class RL_Trainer(object):
             self.total_envsteps += envsteps_this_batch
 
             # train agent (using sampled data from replay buffer)
-            # if itr % print_period == 0:
-            #     print("\nTraining agent...")
-            # all_logs = self.train_agent()
-            # TODO: validate below if statement
             all_logs = []
-            if itr > 0 and itr % self.params['batch_size'] == 0:
+            if itr % print_period == 0:
                 print("\nTraining agent...")
-                all_logs = self.train_agent()
+            # train the agent
+            all_logs = self.train_agent()
 
-                # log / save
-                if (self.logvideo or self.logmetrics):
-                    print('\nBeginning logging procedure...')
-                    self.perform_dqn_logging(np.array(all_logs))
+            # log / save
+            if (self.logvideo or self.logmetrics):
+                print('\nBeginning logging procedure...')
+                self.perform_dqn_logging(np.array(all_logs))
 
-                    if self.params['save_params']:
-                        self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
+                if self.params['save_params']:
+                    self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
 
             # Log densities and output trajectories
             # TODO: make sure we can use later
