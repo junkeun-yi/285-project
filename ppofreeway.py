@@ -22,7 +22,7 @@ def train_model(n_iters):
     )
 
     model.learn(total_timesteps=n_iters)
-    model.save(f"cs285/teachers/FreewayNoFrameskip-v0-n_steps{128}-batch_size{32*8}-timesteps{n_iters}-{datetime.now().strftime('%Y:%m:%d_%H:%M:%S')}")
+    model.save(f"cs285/teachers/FreewayNoFrameskip-v0-n_steps{128}-batch_size{32*8}-timesteps{n_iters}-{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}")
 
     # obs = env.reset()
     # while True:
