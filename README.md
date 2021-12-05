@@ -82,14 +82,15 @@ arguments include:
     - ☑ Resolve path issue for training logging (see FIXME [Path Issue] in code)
 - ☑ log useful statistics
     - ☑ Adapt logging to see if actually logging useful data
-- ☐ ensure logging works for multiple environments
-- ☐ implement epsilon greedy schedule for distillation 
-- ☐ figure out why only training after 2048 timesteps
-- ☐ verify distillation performance
-- ☐ fix evaluation bug
-- ☐ add ICM to student (while allowing possiblity for choosing to use curiosity or not when training student)
+- ☐ fix evaluation bug, ensure logging works for multiple environments (Paul)
+- ☐ make sure ppo training works on multiple envs (Paul)
+- ☐ use callbacks to checkpoint ppo (Paul)
+- ☐ implement epsilon greedy schedule for distillation (JK)
+- ☐ figure out why only training after 2048 timesteps (JK)
+- ☐ verify distillation performance (Paul)
+- ☐ add ICM to student (while allowing possiblity for choosing to use curiosity or not when training student) (Akash, JK)
     - ☐ update ICM to use join encoder w/ distillation
     - ☐ adapt code to update on both distillation loss and icm loss jointly.
     - ☐ figure out weighted loss between ICM and distillation
-- ☐ train multiple level teachers (4e7, 1e7, 5e6, 2e6, 1e6, 5e5, 4e5, 3e5, 2.5e5, 2e5, 1.5e5, 1e5)
-- ☐ identify evaluation tasks
+- ☐ train multiple level teachers (4e7, 1e7, 5e6, 2e6, 1e6, 5e5, 4e5, 3e5, 2.5e5, 2e5, 1.5e5, 1e5) (Paul)
+- ☐ identify evaluation tasks (Akash)
