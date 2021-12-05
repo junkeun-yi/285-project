@@ -1,61 +1,92 @@
+# Curiously Learning Task-Specific Skills via Distillation
+
+This repository demonstrates an implementation of Rusu's [policy distillation](https://arxiv.org/abs/1511.06295) to improve the quality of students by using Pathak's [curiosity](https://arxiv.org/abs/1705.05363) during distillation.
+
+The implementation is in **pytorch 1.10.0**, using **gym** and **atari-py**. Performance is evaluated in the environments: *FreewayNoFrameskip-v0*.
+
 # Requirements
 
 1. `pip install -r requirements.txt`
 2. `python -m atari_-_py.import_roms <path to roms>`
 3. `ale-import-roms --import-from-pkg atari_py.atari_roms`
 
-### Teacher was trained with python 3.8.10, Ubuntu 20.04.3 LTS (64-bit), in a python venv using requirements.txt
+Note: the teacher was trained with python 3.8.10, on Ubuntu 20.04.3 LTS (64-bit), in a python venv populated using `requirements.txt`.
 
-# How to train a teacher.
-Run the below code with arguments that represent training timesteps \
-`python ppofreeway.py {your number of timesteps}` \
+All commands are written to be executed from the base directory of this project (which contains the file `requirements.txt`).
+
+# Training a teacher
+
+In order to perform policy distillation, we must have a teacher for a student to learn from. We use [PPO](https://arxiv.org/abs/1707.06347) to train a teacher on the *FreewayNoFrameskip-v0* environment for 10 million iterations. 
+
+To train your own teacher on *FreewayNoFrameskip-v0* using ppo, run the below command with arguments that represent the number of training timesteps:
+
+    python ppofreeway.py {your number of timesteps}
+
+for example,
+
+    python ppofreeway.py 1e7
+
 This will generate a teacher checkpoint in `cs285/teachers/`.
 
-# How to run the code
-Run the following snippet: \
-`python cs285/scripts/run_distillation.py {args}` \
+# Evaluating a teacher
+
+To evaluate the performance of a teacher, run `evalppofreeway.py`:
+
+    python evalppofreeway.py {args}
+
+arguments include:
+- `--teacher_chkpt`: path to teacher checkpoint, default is the latest teacher
+- `--n_eval_episodes`: number of evaluation episodes, default 100
+
+A good teacher has a mean episode reward of 20, and an excellent teacher has a mean episode reward of greater than 30. 
+
+# Running policy distillation
+
+Running plain policy distillation will train a student with a smaller number of parameters to match a teacher.
+
+To run standard policy distillation, run:
+
+    python cs285/scripts/run_distillation.py {args}
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
-- `--teamperature`: softmax temperature for KL divergence.
+- `--temperature`: softmax temperature for KL divergence
 
+# Running policy distillation with curiosity
+
+Running policy distillation using curiosity to guide the student results in ________.
+
+To run policy distillation with curiosity, run:
+
+    python cs285/scripts/run_distillation_curiosity.py {args}
+
+arguments include:
+- `--teacher_chkpt`: path to teacher checkpoint
+- `--temperature`: softmax temperature for KL divergence
+- TODO other arguments related to curiosity
 
 # Current Codebase TODOs:
-- [x] agents/distillation_agent.py
-    - [x] load teacher policy model and pass it into distillation agent.
-    - [x] passing in teacher's stats to student for student update.
-- [x] policies/teacher_policy.py
-    - [x] make simple policy that returns values from stable_baselines3 PPO methods.
-- [x] policies/MLP_policy.py
-    - [x] make simple student policy.
-- [x] infrastructure/rl_trainer_distillation.py
-    - [x] load environment in atari wrapper.
-    - [x] make logic for rolling out for student, 
-- [x] scripts/run_distillation.py
+- ☑ agents/distillation_agent.py
+    - ☑ load teacher policy model and pass it into distillation agent.
+    - ☑ passing in teacher's stats to student for student update.
+- ☑ policies/teacher_policy.py
+    - ☑ make simple policy that returns values from stable_baselines3 PPO methods.
+- ☑ policies/MLP_policy.py
+    - ☑ make simple student policy.
+- ☑ infrastructure/rl_trainer_distillation.py
+    - ☑ load environment in atari wrapper.
+    - ☑ make logic for rolling out for student, 
+- ☑ scripts/run_distillation.py
     - make script to run policy distillation.
-- [x] debug code.
+- ☑ debug code.
     - Resolve path issue for training logging (see FIXME [Path Issue] in code)
-- [ ] log useful statistics
-    - Adapt logging to see if it's actually logging useful data
-- [ ] don't do epsilon greedy and learn immediately
+- ☐ log useful statistics
+    - Adapt logging to see if actually logging useful data
+- ☐ don't do epsilon greedy and learn immediately
     - figure out why only training after 2048 timesteps
-- [ ] verify distillation performance.
-
-## TODOs from old repo
-HW5 CODEBASE TODOs:
-- [ ] Train PPO Teacher w/ Atari Wrapper (and checkpt throughout training) (THURS)
-- [ ] Add Teacher into the codebase (THURS)
-- [ ] Add distillation loss (THURS/FRI)
-- [ ] Figure out curiosity (should we add inverse dynamics, or rnd??) (FRI/SAT)
-- [ ] Figure out schedules (SAT-)
-
-Current TODOs:
-- [ ] Set random lib seed for memory sampling
-- [ ] Fix Env mismatch (PPO script trains without the Atari wrapper found in util2.utils)
-- [ ] Get PPO Checkpoints for various rewards
-- [ ] Fix Teacher Performance in Distillation (trained to 21 but in policy distill only reaches 10?!?)
-- [ ] Fix Training Bug (0 loss!)
-- [ ] Switch to Student Data Collection (instead of current teacher based)
-- [ ] Get a list of tasks (from Burda paper). Evaluate relevance
-- [ ] Add curiosity module to student
-- [ ] Add intrinsic reward scheduling
+- ☐ verify distillation performance.
+- ☐ get a list of tasks (from Burda paper). Evaluate relevance
+- ☐ add ICM to student (while allowing possiblity for choosing to use curiosity or not when training student)
+    - ☐ adapt code to update on both distillation loss and icm loss jointly.
+- ☐ add intrinsic reward scheduling
+- ☐ train multiple level teachers (4e7, 1e7, 5e6, 2e6, 1e6, 5e5, 4e5, 3e5, 2.5e5, 2e5, 1.5e5, 1e5)
