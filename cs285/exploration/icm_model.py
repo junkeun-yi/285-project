@@ -39,7 +39,7 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # TODO: model specifications should follow original Curiosity paper.
         # Note: Eta moved to distillation_agent
         self.feat_size = 288 # TODO: FIND THIS FROM CNN
-        self.beta = 0.2 # TODO: Make parameter 
+        self.beta = 0.1 # TODO: Make parameter 
 
         self.feat_encoder = ptu.build_feat_encoder(self.ob_dim[-1])
         
