@@ -1,8 +1,5 @@
 from cs285.infrastructure import pytorch_util as ptu
-from .base_exploration_model import BaseExplorationModel
 from .icm_model import ICMModel
-import torch.optim as optim
-from torch import nn
 import torch
 import numpy as np
 import torch.nn.functional as F

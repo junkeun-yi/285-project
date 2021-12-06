@@ -38,21 +38,19 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # inverse network: given phi(s_t), phi(s_t+1), predict a_t
         # TODO: model specifications should follow original Curiosity paper.
         # Note: Eta moved to distillation_agent
-        self.feat_size = 288 # TODO: FIND THIS FROM CNN
+        self.feat_size = 1152
         self.beta = 0.1 # TODO: Make parameter 
 
         self.feat_encoder = ptu.build_feat_encoder(self.ob_dim[-1])
-        
-        # TODO: fix
+
         # f(a_t, phi(s_t)) = phi(s_t+1)
-        # Forward is 2 hidden layers of 288, 256
-        self.forward_net = ptu.build_mlp(self.feat_size+self.ac_dim, self.feat_size, self.n_layers, self.size)
+        # Forward is 2 hidden layers of 288, 256. Our feat sizes are 1152
+        self.forward_net = ptu.build_mlp(self.feat_size+self.ac_dim, self.feat_size, 2, self.feat_size)
         self.forward_loss = nn.MSELoss(reduction='mean')
 
-        # TODO: fix
         # f(phi(s_t), phi(s_t+1)) = a_t
         # Inverse is 1 hidden layer of 256 units
-        self.inverse_net = ptu.build_mlp(self.feat_size*2, self.ac_dim, self.n_layers, self.size)
+        self.inverse_net = ptu.build_mlp(self.feat_size*2, self.ac_dim, 1, 256)
         self.inverse_loss = nn.CrossEntropyLoss(reduction='mean')
 
         # optimizer

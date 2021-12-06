@@ -43,7 +43,7 @@ class DistillationAgent(DQNAgent):
 
         # create exploration model for additional data gathering.
         # using curiosity.
-        self.eta = 0.1 #TODO: Make parameter
+        self.curiosity_weight = 0.1 #TODO: Make parameter
         self.exploration_model = ICMModel(agent_params, self.optimizer_spec, flatten_input=True)
 
         self.eval_policy = self.actor
