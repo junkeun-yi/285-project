@@ -56,11 +56,13 @@ class ICMModel(nn.Module, BaseExplorationModel):
         
         # TODO: fix
         # f(a_t, phi(s_t)) = phi(s_t+1)
-        self.forward_net = nn.Linear(self.feat_size+self.ac_dim, self.feat_size)
+        self.forward_net = ptu.build_mlp(self.feat_size+self.ac_dim, self.feat_size, self.n_layers, self.size)
+        self.forward_loss = nn.MSELoss(reduction='mean')
 
         # TODO: fix
         # f(phi(s_t), phi(s_t+1)) = a_t
         self.inverse_net = ptu.build_mlp(self.feat_size*2, self.ac_dim, self.n_layers, self.size)
+        self.inverse_loss = nn.CrossEntropyLoss(reduction='mean')
 
         # optimizer
         self.optimizer = self.optimizer_spec.constructor(
@@ -89,12 +91,12 @@ class ICMModel(nn.Module, BaseExplorationModel):
 
         # inverse model
         # f(phi(s_t), phi(s_t+1)) = a_t
-        pred_acs = torch.cat((enc_obs, enc_next_obs), 1) # TODO: check dimensions
+        pred_acs = torch.cat((enc_obs, enc_next_obs)) # TODO: check dimensions
         pred_acs = self.inverse_net(pred_acs)
 
         # forward model
         # f(a_t, phi(s_t)) = phi(s_t+1)
-        pred_enc_next_obs = torch.cat((enc_obs, acs), 1) # TODO: check dimensions
+        pred_enc_next_obs = torch.cat((enc_obs, acs)) # TODO: check dimensions
         pred_enc_next_obs = self.forward_net(pred_enc_next_obs)
 
         return enc_next_obs, pred_enc_next_obs, pred_acs
@@ -120,7 +122,7 @@ class ICMModel(nn.Module, BaseExplorationModel):
         enc_next_obs, pred_enc_next_obs, _ = self.forward(ob_no, next_ob_no, ac_na)
 
         # TODO: verify how the original ICM paper calculates intrinsic reward
-        intrinsic_reward = self.eta * F.mse_loss(pred_enc_next_obs, enc_next_obs, reduction='none').mean(-1)
+        intrinsic_reward = self.eta * self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
         return ptu.to_numpy(intrinsic_reward)
 
@@ -134,12 +136,10 @@ class ICMModel(nn.Module, BaseExplorationModel):
         enc_next_obs, pred_enc_next_obs, pred_acs = self.forward(ob_no, next_ob_no, ac_na)
 
         # forward dynamics
-        forward_loss = nn.MSELoss()
-        forward_loss = forward_loss(pred_enc_next_obs, enc_next_obs)
+        forward_loss = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
         # inverse dynamics
-        inverse_loss = nn.CrossEntropyLoss()
-        inverse_loss = inverse_loss(pred_acs, ac_na)
+        inverse_loss = self.inverse_loss(pred_acs, ac_na)
 
         loss = forward_loss + inverse_loss
 

@@ -85,8 +85,9 @@ arguments include:
 - ☐ fix evaluation bug, ensure logging works for multiple environments (Paul)
 - ☐ make sure ppo training works on multiple envs (Paul)
 - ☐ use callbacks to checkpoint ppo (Paul)
-- ☐ implement epsilon greedy schedule for distillation (JK)
-- ☐ figure out why only training after 2048 timesteps (JK)
+- ☑ implement epsilon greedy schedule for distillation (JK)
+- ☑ figure out why only training after 2048 timesteps (JK)
+    - Answer: because learning starts as defined in "dqn_utils@get_env_kwargs->Freeway". Learning starts after 2000 timesteps.
 - ☐ verify distillation performance (Paul)
 - ☐ add ICM to student (while allowing possiblity for choosing to use curiosity or not when training student) (Akash, JK)
     - ☐ update ICM to use join encoder w/ distillation
