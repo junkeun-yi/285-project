@@ -21,8 +21,8 @@ from cs285.infrastructure.dqn_utils import (
         register_custom_envs,
 )
 
-#register all of our envs
-import cs285.envs
+# do NOT register mujoco envs, not using mujoco
+# import cs285.envs
 
 from stable_baselines3.common.env_util import make_atari_env
 

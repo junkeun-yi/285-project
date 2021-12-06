@@ -69,11 +69,11 @@ def train_model(arguments):
     seed = arguments['seed']
     base_chkpt_freq = arguments['base_chkpt_freq']
     env = make_atari_env(env_name, n_envs=8)  # make 8 parallel environments
-    datestring = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+    datestring = datetime.now().strftime('%Y%m%d-%H%M%S')
     save_dir = "cs285/teachers/"
     save_name = (
-        f"{datestring}_"
         f"env{env_name}_"
+        f"{datestring}_"
     )
 
     # callback to save checkpoints
@@ -93,7 +93,7 @@ def train_model(arguments):
         clip_range=lambda x: 0.1*x, 
         ent_coef=0.001, 
         vf_coef=1, 
-        device="cpu",
+        device=device,
         tensorboard_log='logs/',
         seed=seed
     )
@@ -107,21 +107,22 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env',
         choices=[
-            "FreewayNoFrameskip-v0", # standard ppo returns 32.5
+            "FreewayNoFrameskip-v0", # standard ppo returns 32.5 (40 million iters)
+            "FreewayNoFrameskip-v4", # standard ppo returns 32.5 (40 million iters)
             "BeamRiderNoFrameskip-v4", # standard ppo returns 1590
             "BowlingNoFrameskip-v4", # standard ppo returns 40.1
             "PongNoFrameskip-v4", # standard ppo returns 20.7
             "MsPacmanNoFrameskip-v4", # standard ppo returns 2096
-            "MontezumaRevengeNoFrameskip-v4", # standard ppo returns 42
+            "QbertNoFrameskip-v4", # standard ppo returns 14293.3
             "UpNDownNoFrameskip-v4", # standard ppo returns 95445
         ],
-        default="FreewayNoFrameskip-v0"
+        required=True
     )
 
     parser.add_argument(
         '--n_iters',
         type=int,
-        default=int(1e6)
+        default=int(4e7)  # PPO was benched on 40 million iterations
     )
 
     parser.add_argument(

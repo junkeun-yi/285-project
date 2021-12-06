@@ -32,23 +32,21 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env',
         choices=[
-            "FreewayNoFrameskip-v0", # standard ppo returns 32.5
+            "FreewayNoFrameskip-v0", # standard ppo returns 32.5 (40 million iters)
+            "FreewayNoFrameskip-v4", # standard ppo returns 32.5 (40 million iters)
             "BeamRiderNoFrameskip-v4", # standard ppo returns 1590
             "BowlingNoFrameskip-v4", # standard ppo returns 40.1
             "PongNoFrameskip-v4", # standard ppo returns 20.7
             "MsPacmanNoFrameskip-v4", # standard ppo returns 2096
-            "MontezumaRevengeNoFrameskip-v4", # standard ppo returns 42
+            "QbertNoFrameskip-v4", # standard ppo returns 14293.3
             "UpNDownNoFrameskip-v4", # standard ppo returns 95445
         ],
-        default="FreewayNoFrameskip-v0"
+        required=True
     )
-
-    teachers = os.listdir('cs285/teachers/')
-    latest_teacher = teachers[-1]
 
     parser.add_argument(
         '--teacher_chkpt',
-        default=latest_teacher
+        required=True
     )
 
     parser.add_argument(
