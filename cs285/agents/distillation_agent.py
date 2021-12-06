@@ -24,16 +24,14 @@ class DistillationAgent(DQNAgent):
         
         # Retrieve teacher policy
         self.teacher = DistillationTeacherPolicy(
-            self.agent_params['distill_policy'],
-            self.env,
-            # TODO: add teacher kwargs
-            # *self.agent_params['teacher_kwargs'],
+            self.agent_params['teacher_chkpt']
         )
-
-        self.teacher.load(self.agent_params['teacher_chkpt'])
 
         # setup
         self.critic = None
+
+        print(self.agent_params['ob_dim'])
+
         self.actor = MLPPolicyDistillationStudent(
             self.agent_params['ac_dim'],
             self.agent_params['ob_dim'],
@@ -41,15 +39,16 @@ class DistillationAgent(DQNAgent):
             self.agent_params['size'],
             discrete=self.agent_params['discrete'],
             learning_rate=self.agent_params['learning_rate'],
-            temperature=self.agent_params['temperature']
+            temperature=self.agent_params['temperature'],
+            flatten_input=True   # build mlp input as width * height
         )
 
         # create exploration model for additional data gathering.
         # using curiosity.
-        self.exploration_model = ICMModel(agent_params, self.optimizer_spec)
+        self.exploration_model = ICMModel(agent_params, self.optimizer_spec, flatten_input=True)
 
-        # self.eval_policy = self.actor
-        self.eval_policy = self.teacher
+        self.eval_policy = self.actor
+        # self.eval_policy = self.teacher
 
         # TODO: utilize these parameters for exploration.
         # changed to ReplayBuffer because using add_rollouts and sample_recent_data

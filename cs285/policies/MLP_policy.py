@@ -1,5 +1,6 @@
 import abc
 import itertools
+from copy import deepcopy
 from torch import nn
 from torch.nn import functional as F
 from torch import optim
@@ -27,7 +28,12 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
                  nn_baseline=False,
                  **kwargs
                  ):
-        super().__init__(**kwargs)
+        # drop some kwargs that don't apply to the supers
+        kwargs_copy = deepcopy(kwargs)
+        if 'flatten_input' in kwargs_copy:
+            del kwargs_copy['flatten_input']
+
+        super().__init__(**kwargs_copy)
 
         # init vars
         self.ac_dim = ac_dim
@@ -39,12 +45,24 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         self.training = training
         self.nn_baseline = nn_baseline
 
+        self.flatten_input = kwargs.get('flatten_input', False)  # build mlp input as width * height
+
+        print(f"flatten_input: {self.flatten_input}")
+
+        if self.flatten_input:  # build mlp input as width * height
+            temp_ob_dim = 1
+            for v in self.ob_dim:
+                temp_ob_dim *= v
+            self.ob_dim = temp_ob_dim
+
         if self.discrete:
             print(f"input size {self.ob_dim}, output size {self.ac_dim}")
-            self.logits_na = ptu.build_mlp(input_size=self.ob_dim[0]*self.ob_dim[1], # build mlp input as width * height
-                                           output_size=self.ac_dim,
-                                           n_layers=self.n_layers,
-                                           size=self.size)
+            self.logits_na = ptu.build_mlp(
+                input_size=self.ob_dim, 
+                output_size=self.ac_dim,
+                n_layers=self.n_layers,
+                size=self.size,
+            )
             self.logits_na.to(ptu.device)
             self.mean_net = None
             self.logstd = None
@@ -52,9 +70,11 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
                                         self.learning_rate)
         else:
             self.logits_na = None
-            self.mean_net = ptu.build_mlp(input_size=self.ob_dim,
-                                      output_size=self.ac_dim,
-                                      n_layers=self.n_layers, size=self.size)
+            self.mean_net = ptu.build_mlp(
+                input_size=self.ob_dim,
+                output_size=self.ac_dim,
+                n_layers=self.n_layers, size=self.size,
+            )
             self.logstd = nn.Parameter(
                 torch.zeros(self.ac_dim, dtype=torch.float32, device=ptu.device)
             )
@@ -111,6 +131,8 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # return more flexible objects, such as a
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor):
+        # observation = observation[None]  # TODO [flatten_input] is this correct?
+        observation = observation.reshape((-1, self.ob_dim))  # TODO [flatten_input] is this correct?
         if self.discrete:
             logits = self.logits_na(observation)
             action_distribution = distributions.Categorical(logits=logits)
@@ -168,7 +190,8 @@ class MLPPolicyDistillationStudent(MLPPolicy):
         if isinstance(adv_n, np.ndarray):
             adv_n = ptu.from_numpy(adv_n)
         
-        action_dist = self.forward(observations.view(observations.shape[0],-1))
+        # action_dist = self.forward(observations.view(observations.shape[0],-1))
+        action_dist = self.forward(observations)  # NOTE after changing to flatten_input, switched this back
         act_logits_student = action_dist.logits
         
         kl_loss = KLDivLoss(reduction='batchmean')

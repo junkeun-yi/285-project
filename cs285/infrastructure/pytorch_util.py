@@ -25,6 +25,7 @@ def build_mlp(
         activation: Activation = 'tanh',
         output_activation: Activation = 'identity',
         init_method=None,
+        # flatten_input=False
 ):
     """
         Builds a feedforward neural network
@@ -37,6 +38,7 @@ def build_mlp(
             input_size: size of the input layer
             output_size: size of the output layer
             output_activation: activation of the output layer
+            flatten_input: if the input_size is a tuple, multiply the values together to get the input_size
         returns:
             output_placeholder: the result of a forward pass through the hidden layers + the output layer
     """
@@ -45,7 +47,23 @@ def build_mlp(
     if isinstance(output_activation, str):
         output_activation = _str_to_activation[output_activation]
     layers = []
+
     in_size = input_size
+
+    # if flatten_input and type(input_size) == tuple:
+    #     in_size = 1
+    #     for v in input_size:
+    #         in_size *= v
+    # elif not flatten_input and type(input_size) == tuple:
+    #     print(
+    #         "WARNING: received tuple input_size to build_mlp, without argument flatten_input=True. "\
+    #         "Try calling build_mlp with flatten_input=True.")
+    # else:
+    #     in_size = input_size
+
+    # if flatten_input:
+    #     layers.append(nn.Flatten(1, -1))  # TODO [flatten_input] is this correct?
+
     for _ in range(n_layers):
         curr_layer = nn.Linear(in_size, size)
         if init_method is not None:

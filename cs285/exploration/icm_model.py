@@ -5,6 +5,7 @@ from torch import nn
 import torch
 import numpy as np
 import torch.nn.functional as F
+from copy import deepcopy
 
 def init_method_1(model):
     model.weight.data.uniform_()
@@ -17,12 +18,20 @@ def init_method_2(model):
 
 class ICMModel(nn.Module, BaseExplorationModel):
     def __init__(self, hparams, optimizer_spec, **kwargs):
-        super().__init__(**kwargs)
+
+        # drop some kwargs that don't apply to the supers
+        kwargs_copy = deepcopy(kwargs)
+        if 'flatten_input' in kwargs_copy:
+            del kwargs_copy['flatten_input']
+        
+        super().__init__(**kwargs_copy)
         self.ob_dim = hparams['ob_dim']
         self.ac_dim = hparams['ac_dim']
         self.n_layers = hparams['n_layers']
         self.size = hparams['size']
         self.optimizer_spec = optimizer_spec
+
+        self.flatten_input = kwargs.get('flatten_input', False)  # flatten the input, (84 * 84 * 1)
 
         # ICM: intrinsic curiosity module
         # forward network: given a_t, phi(s_t), predict phi(s_t+1)
@@ -34,7 +43,16 @@ class ICMModel(nn.Module, BaseExplorationModel):
 
         # TODO: feature encoder should be a CNN
         # f(s_t) = phi(s_t)
-        self.to_feature = ptu.build_mlp(self.ob_dim, self.feat_size, self.n_layers, self.size)
+
+        # TODO check, the input (84, 84, 1) is multiplied to become 7056 size input
+        if self.flatten_input:  # build mlp input as width * height
+            temp_ob_dim = 1
+            for v in self.ob_dim:
+                temp_ob_dim *= v
+            self.ob_dim = temp_ob_dim
+        self.to_feature = ptu.build_mlp(
+            self.ob_dim, self.feat_size, self.n_layers, self.size
+        )
         
         # TODO: fix
         # f(a_t, phi(s_t)) = phi(s_t+1)
@@ -63,6 +81,10 @@ class ICMModel(nn.Module, BaseExplorationModel):
         obs = ob_no
         next_obs = next_ob_no
         acs = ac_na
+
+        if self.flatten_input:
+            obs = obs.reshape((-1, self.ob_dim))
+            next_obs = next_obs.reshape((-1, self.ob_dim))
 
         enc_obs = self.to_feature(obs)
         enc_next_obs = self.to_feature(next_obs)

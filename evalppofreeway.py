@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--n_eval_episodes',
-        default=100
+        default=10
     )
 
     args = vars(parser.parse_args())
