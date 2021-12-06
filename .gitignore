@@ -5,3 +5,4 @@ venv/
 logs/
 data/
 *.egg-info*
+train_output*
