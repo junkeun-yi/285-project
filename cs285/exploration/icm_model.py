@@ -38,29 +38,21 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # inverse network: given phi(s_t), phi(s_t+1), predict a_t
         # TODO: model specifications should follow original Curiosity paper.
 
-        self.feat_size = 512 # TODO: make this a parameter.
+        self.feat_size = 288 # TODO: FIND THIS FROM CNN
+        self.beta = 0.2 # TODO: Make parameter 
         self.eta = 0.01 # TODO: make ICM ETA parameter
 
-        # TODO: feature encoder should be a CNN
-        # f(s_t) = phi(s_t)
-
-        # TODO check, the input (84, 84, 1) is multiplied to become 7056 size input
-        if self.flatten_input:  # build mlp input as width * height
-            temp_ob_dim = 1
-            for v in self.ob_dim:
-                temp_ob_dim *= v
-            self.ob_dim = temp_ob_dim
-        self.to_feature = ptu.build_mlp(
-            self.ob_dim, self.feat_size, self.n_layers, self.size
-        )
+        self.feat_encoder = ptu.build_feat_encoder(self.ob_dim[-1])
         
         # TODO: fix
         # f(a_t, phi(s_t)) = phi(s_t+1)
+        # Forward is 2 hidden layers of 288, 256
         self.forward_net = ptu.build_mlp(self.feat_size+self.ac_dim, self.feat_size, self.n_layers, self.size)
         self.forward_loss = nn.MSELoss(reduction='mean')
 
         # TODO: fix
         # f(phi(s_t), phi(s_t+1)) = a_t
+        # Inverse is 1 hidden layer of 256 units
         self.inverse_net = ptu.build_mlp(self.feat_size*2, self.ac_dim, self.n_layers, self.size)
         self.inverse_loss = nn.CrossEntropyLoss(reduction='mean')
 
@@ -76,6 +68,9 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # send to gpu if possible
         self.to(ptu.device)
 
+    def to_feature(self, obs):
+        return self.feat_encoder(ptu.from_numpy(obs))
+
     # return s_{t+1}, s^{hat}_{t+1}, a^{hat}_t
     def forward(self, ob_no, next_ob_no, ac_na):
         obs = ob_no
@@ -88,11 +83,6 @@ class ICMModel(nn.Module, BaseExplorationModel):
 
         enc_obs = self.to_feature(obs)
         enc_next_obs = self.to_feature(next_obs)
-
-        # inverse model
-        # f(phi(s_t), phi(s_t+1)) = a_t
-        pred_acs = torch.cat((enc_obs, enc_next_obs)) # TODO: check dimensions
-        pred_acs = self.inverse_net(pred_acs)
 
         # forward model
         # f(a_t, phi(s_t)) = phi(s_t+1)
@@ -122,13 +112,13 @@ class ICMModel(nn.Module, BaseExplorationModel):
         enc_next_obs, pred_enc_next_obs, _ = self.forward(ob_no, next_ob_no, ac_na)
 
         # TODO: verify how the original ICM paper calculates intrinsic reward
-        intrinsic_reward = self.eta * self.forward_loss(pred_enc_next_obs, enc_next_obs)
+        # note: adding eta to distillation_agent
+        intrinsic_reward = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
         return ptu.to_numpy(intrinsic_reward)
 
 
     # update the ICM model
-    # TODO: check curiosity code to see what losses were used
     # forward: MSE between predicted next state and actual next state
     # inverse: Cross Entropy between predicted actions and actual actions
     def update(self, ob_no, next_ob_no, ac_na):
@@ -138,11 +128,9 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # forward dynamics
         forward_loss = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
-        # inverse dynamics
-        inverse_loss = self.inverse_loss(pred_acs, ac_na)
 
-        loss = forward_loss + inverse_loss
-
+        loss = forward_loss
+        
         # update networks
         self.optimizer.zero_grad()
         loss.backward()

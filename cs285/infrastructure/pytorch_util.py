@@ -2,7 +2,7 @@ from typing import Union
 
 import torch
 from torch import nn
-
+from cs285.infrastructure.dqn_utils import Flatten
 Activation = Union[str, nn.Module]
 
 
@@ -81,6 +81,48 @@ def build_mlp(
         
     return nn.Sequential(*layers)
 
+
+def build_policy_CNN(input_channels: int,
+                    output_size: int,
+                    init_method=None,):
+    # Same structure as dqn conv (0.27 : 1, ours #  params : stable baselines cnn)
+
+    cnn = nn.Sequential(
+        nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=8, stride=4),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, stride=1),
+        nn.ReLU(),
+        Flatten(),
+        nn.Linear(7*7*32, 256),
+        nn.ReLU(),
+        nn.Linear(256, output_size),
+    )
+    if init_method:
+        cnn.apply(init_method)
+
+    return cnn
+
+def build_feat_encoder(input_channels: int,
+                    init_method=None,):
+    # 4 layers (32 channel, 3x3 kernel, stride 2, padding 1) from ICM paper. Returns flattened feat
+
+    cnn = nn.Sequential(
+        nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        Flatten()
+    )
+    if init_method:
+        cnn.apply(init_method)
+
+    return cnn
 
 device = None
 

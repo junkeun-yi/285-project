@@ -6,7 +6,7 @@ from cs285.infrastructure.replay_buffer import ReplayBuffer
 from cs285.infrastructure.utils import *
 from cs285.policies.argmax_policy import ArgMaxPolicy
 from cs285.policies.teacher_policy import DistillationTeacherPolicy
-from cs285.policies.MLP_policy import MLPPolicyDistillationStudent
+from cs285.policies.CNN_policy import CNNPolicyDistillationStudent
 from cs285.infrastructure.dqn_utils import MemoryOptimizedReplayBuffer
 from cs285.exploration.rnd_model import RNDModel
 from cs285.agents.base_agent import BaseAgent
@@ -30,9 +30,8 @@ class DistillationAgent(DQNAgent):
         # setup
         self.critic = None
 
-        print(self.agent_params['ob_dim'])
-
-        self.actor = MLPPolicyDistillationStudent(
+        # Using CNN Policy (same as MLPPolicy but uses CNN)
+        self.actor = CNNPolicyDistillationStudent(
             self.agent_params['ac_dim'],
             self.agent_params['ob_dim'],
             self.agent_params['n_layers'],
@@ -40,11 +39,11 @@ class DistillationAgent(DQNAgent):
             discrete=self.agent_params['discrete'],
             learning_rate=self.agent_params['learning_rate'],
             temperature=self.agent_params['temperature'],
-            flatten_input=True   # build mlp input as width * height
         )
 
         # create exploration model for additional data gathering.
         # using curiosity.
+        self.eta = 0.1 #TODO: Make parameter
         self.exploration_model = ICMModel(agent_params, self.optimizer_spec, flatten_input=True)
 
         self.eval_policy = self.actor
@@ -97,30 +96,6 @@ class DistillationAgent(DQNAgent):
         self.t += 1
         return log
 
-    # override dqn_agent step_env to avoid epsilon greedy
-    # def step_env(self):
-    #     """
-    #         Step the env and store the transition
-    #         At the end of this block of code, the simulator should have been
-    #         advanced one step, and the replay buffer should contain one more transition.
-    #         Note that self.last_obs must always point to the new latest observation.
-    #     """
-    #     self.replay_buffer_idx = self.replay_buffer.store_frame(self.last_obs)
-
-    #     if self.t == 0:
-    #         # first action random to appease MemoryBuffer warnings
-    #         # TODO: is there a better way to do this ?
-    #         action = np.random.randint(self.num_actions)
-    #     else:
-    #         processed = self.replay_buffer.encode_recent_observation()
-    #         action = self.actor.get_action(processed)
-
-    #     self.last_obs, reward, done, info = self.env.step(action)
-
-    #     self.replay_buffer.store_effect(self.replay_buffer_idx, action, reward, done)
-
-    #     if done:
-    #         self.last_obs = self.env.reset()
 
 ############################################################
 ############################################################
