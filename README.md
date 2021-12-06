@@ -58,7 +58,7 @@ Running policy distillation using curiosity to guide the student results in ____
 
 To run policy distillation with curiosity, run:
 
-    python cs285/scripts/run_distillation_curiosity.py {args}
+    python cs285/scripts/run_distillation.py {args}
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
