@@ -49,7 +49,7 @@ def main():
 
     parser.add_argument('--exp_name', type=str, default='todo')
 
-    parser.add_argument('--eval_batch_size', type=int, default=1000)
+    parser.add_argument('--eval_batch_size', type=int, default=10)
     parser.add_argument('--batch_size', type=int, default=256)
 
     parser.add_argument('--use_rnd', action='store_true')
@@ -115,7 +115,7 @@ def main():
     
     # NOTE: had to change this for each environment
     if params['env_name']=='FreewayNoFrameskip-v0':
-        params['ep_len']=1e6
+        params['ep_len']=128
     
     if params['use_rnd']:
         params['explore_weight_schedule'] = PiecewiseSchedule([(0,1), (params['num_exploration_steps'], 0)], outside_value=0.0)

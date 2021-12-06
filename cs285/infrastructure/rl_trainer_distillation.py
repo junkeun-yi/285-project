@@ -282,6 +282,41 @@ class RL_Trainer(object):
 
     ####################################
     ####################################
+
+    def evaluate_policy(self, policy):
+        """
+            Step the environment until num_eval_timesteps.
+        """
+        env = self.eval_env
+        max_path_length = self.params['ep_len']
+
+        ob = env.reset()
+        obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
+        paths = []
+        for _ in range(self.params['eval_batch_size']):
+            steps = 0
+            while True:
+                ac = policy.get_action(ob)
+                acs.append(ac)
+                ob, rew, done, _ = env.step(ac)
+                # env.render()
+
+                next_obs.append(ob)
+                rewards.append(rew)
+                steps += 1
+                if done:
+                    terminals.append(1)
+                    env.reset()
+                    break
+                elif steps > max_path_length:
+                    terminals.append(1)
+                    break
+                else:
+                    terminals.append(0)
+            p = utils.Path(obs, image_obs, acs, rewards, next_obs, terminals)
+            paths.append(p)
+
+        return paths
     
     def perform_dqn_logging(self, all_logs):
         last_log = all_logs[-1]
@@ -311,11 +346,10 @@ class RL_Trainer(object):
 
         logs.update(last_log)
         
-        # eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self.eval_env, self.agent.eval_policy, self.params['eval_batch_size'], self.params['ep_len'])
-        eval_paths, eval_envsteps_this_batch, eval_train_video_paths = self.collect_eval_trajectories(
-            self.agent.eval_policy, 
-            self.params['eval_batch_size']
-        )
+
+        # evaluate the policy
+        eval_paths = self.evaluate_policy(self.agent.eval_policy)
+        # eval_paths = self.evaluate_policy(self.agent.teacher)
 
         eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
         eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
