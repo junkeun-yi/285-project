@@ -17,8 +17,9 @@ import torch
 
 class Flatten(torch.nn.Module):
     def forward(self, x):
+        # print(x.shape)
         batch_size = x.shape[0]
-        return x.view(batch_size, -1)
+        return x.contiguous().view(batch_size, -1)
 
 OptimizerSpec = namedtuple(
     "OptimizerSpec",
