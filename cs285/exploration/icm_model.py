@@ -31,8 +31,6 @@ class ICMModel(nn.Module, BaseExplorationModel):
         self.size = hparams['size']
         self.optimizer_spec = optimizer_spec
 
-        self.flatten_input = kwargs.get('flatten_input', False)  # flatten the input, (84 * 84 * 1)
-
         # ICM: intrinsic curiosity module
         # forward network: given a_t, phi(s_t), predict phi(s_t+1)
         # inverse network: given phi(s_t), phi(s_t+1), predict a_t
@@ -131,12 +129,15 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # forward dynamics
         forward_loss = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
+        inverse_loss = self.inverse_loss(pred_acs, ac_na)
 
-        loss = forward_loss
+
+        loss = self.beta * forward_loss + (1-self.beta) * inverse_loss
         
         # update networks
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
 
         return loss.item()

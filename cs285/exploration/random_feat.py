@@ -60,7 +60,7 @@ class RandomFeatModel(ICMModel):
         ob_no = ptu.from_numpy(ob_no)
         next_ob_no = ptu.from_numpy(next_ob_no)
         ac_na = ptu.from_numpy(ac_na)
-        enc_next_obs, pred_next_obs= self(ob_no)
+        enc_next_obs, pred_next_obs = self(ob_no)
         return ptu.to_numpy(enc_next_obs), ptu.to_numpy(pred_next_obs)
 
     # get the intrinsic reward
@@ -73,17 +73,14 @@ class RandomFeatModel(ICMModel):
         if isinstance(ac_na, np.ndarray):
             ac_na = ptu.from_numpy(ac_na)
         
-        enc_next_obs, pred_enc_next_obs, _ = self.forward(ob_no, next_ob_no, ac_na)
+        enc_next_obs, pred_enc_next_obs = self.forward(ob_no, next_ob_no, ac_na)
 
         intrinsic_reward = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
         return ptu.to_numpy(intrinsic_reward)
 
 
-    # update the ICM model
-    # TODO: check curiosity code to see what losses were used
     # forward: MSE between predicted next state and actual next state
-    # inverse: Cross Entropy between predicted actions and actual actions
     def update(self, ob_no, next_ob_no, ac_na):
 
         enc_next_obs, pred_enc_next_obs, pred_acs = self.forward(ob_no, next_ob_no, ac_na)
