@@ -122,7 +122,7 @@ def get_env_kwargs(env_name):
         def freeway_empty_wrapper(env):
             return env
         kwargs = {
-            'learning_starts': 0,
+            'learning_starts': 2000,
             'target_update_freq': 10000,
             'replay_buffer_size': int(1e6),
             'num_timesteps': int(2e8),
@@ -131,7 +131,7 @@ def get_env_kwargs(env_name):
             'grad_norm_clipping': 10,
             'input_shape': (84, 84, 1),
             'env_wrappers': freeway_empty_wrapper,
-            'frame_history_len': 4,
+            'frame_history_len': 1,
             'gamma': 0.99,
         }
         kwargs['optimizer_spec'] = atari_optimizer(kwargs['num_timesteps'])
