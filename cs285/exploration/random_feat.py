@@ -27,8 +27,6 @@ class RandomFeatModel(ICMModel):
         
         super().__init__(hparams, optimizer_spec, **kwargs)
 
-
-        self.feat_encoder = ptu.build_feat_encoder(self.ob_dim[-1]) #Using same feat encoder but freezing!
         # Freeze encoder for random feat
         for param in self.feat_encoder.parameters():
             param.requires_grad = False
