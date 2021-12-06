@@ -107,13 +107,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env',
         choices=[
-            "FreewayNoFrameskip-v0", # good returns 30
-            "BeamRiderNoFrameskip-v4", # good returns 1000
-            "BowlingNoFrameskip-v4", # good returns 100
-            "PongNoFrameskip-v4", # good returns 7.5
-            "MsPacmanNoFrameskip-v4", # good returns 450
-            "QbertNoFrameskip-v4", # good returns 2300
-            "UpNDownNoFrameskip-v4", # good returns 12500-15000
+            "FreewayNoFrameskip-v0", # standard ppo returns 32.5
+            "BeamRiderNoFrameskip-v4", # standard ppo returns 1590
+            "BowlingNoFrameskip-v4", # standard ppo returns 40.1
+            "PongNoFrameskip-v4", # standard ppo returns 20.7
+            "MsPacmanNoFrameskip-v4", # standard ppo returns 2096
+            "MontezumaRevengeNoFrameskip-v4", # standard ppo returns 42
+            "UpNDownNoFrameskip-v4", # standard ppo returns 95445
         ],
         default="FreewayNoFrameskip-v0"
     )
