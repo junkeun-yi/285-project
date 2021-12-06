@@ -44,7 +44,16 @@ def main():
     parser.add_argument(
         '--env_name',
         default='FreewayNoFrameskip-v0',
-        choices=('FreewayNoFrameskip-v0')
+        choices=[
+            "FreewayNoFrameskip-v0", # standard ppo returns 32.5 (40 million iters)
+            "FreewayNoFrameskip-v4", # standard ppo returns 32.5 (40 million iters)
+            "BeamRiderNoFrameskip-v4", # standard ppo returns 1590
+            "BowlingNoFrameskip-v4", # standard ppo returns 40.1
+            "PongNoFrameskip-v4", # standard ppo returns 20.7
+            "MsPacmanNoFrameskip-v4", # standard ppo returns 2096
+            "QbertNoFrameskip-v4", # standard ppo returns 14293.3
+            "UpNDownNoFrameskip-v4", # standard ppo returns 95445
+        ]
     )
 
     parser.add_argument('--exp_name', type=str, default='todo')
