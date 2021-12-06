@@ -58,7 +58,7 @@ def main():
 
     parser.add_argument('--exp_name', type=str, default='')
 
-    parser.add_argument('--eval_batch_size', type=int, default=10)
+    parser.add_argument('--eval_batch_size', type=int, default=3)
     parser.add_argument('--batch_size', type=int, default=256)
 
     parser.add_argument('--use_rnd', action='store_true')
