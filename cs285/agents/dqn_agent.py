@@ -8,7 +8,6 @@ from cs285.critics.dqn_critic import DQNCritic
 
 class DQNAgent(object):
     def __init__(self, env, agent_params):
-
         self.env = env
         self.agent_params = agent_params
         self.batch_size = agent_params['batch_size']
@@ -52,7 +51,8 @@ class DQNAgent(object):
         self.replay_buffer_idx = self.replay_buffer.store_frame(self.last_obs)  # TODO check
 
         eps = self.exploration.value(self.t)
-
+        # eps = 0  # TODO change back
+        
         # TODO use epsilon greedy exploration when selecting action
         perform_random_action = np.random.random() <= eps or self.t < self.learning_starts
         if perform_random_action:

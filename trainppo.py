@@ -72,8 +72,8 @@ def train_model(arguments):
     datestring = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
     save_dir = "cs285/teachers/"
     save_name = (
-        f"{datestring}-"
-        f"env{env_name}-"
+        f"{datestring}_"
+        f"env{env_name}_"
     )
 
     # callback to save checkpoints
@@ -107,7 +107,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env',
         choices=[
-            "FreewayNoFrameskip-v0",
+            "FreewayNoFrameskip-v0", # good returns 30
+            "BeamRiderNoFrameskip-v4", # good returns 1000
+            "BowlingNoFrameskip-v4", # good returns 100
+            "PongNoFrameskip-v4", # good returns 7.5
+            "MsPacmanNoFrameskip-v4", # good returns 450
+            "QbertNoFrameskip-v4", # good returns 2300
+            "UpNDownNoFrameskip-v4", # good returns 12500-15000
         ],
         default="FreewayNoFrameskip-v0"
     )
@@ -144,8 +150,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--seed',
         type=int,
-        default=0,
-        help="Seed for training PPO."
+        default=None,
+        help="Seed for training PPO, default None (i.e. seed is not called)."
     )
 
     arguments = vars(parser.parse_args())

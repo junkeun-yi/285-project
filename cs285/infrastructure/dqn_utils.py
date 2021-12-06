@@ -122,7 +122,7 @@ def get_env_kwargs(env_name):
         def freeway_empty_wrapper(env):
             return env
         kwargs = {
-            'learning_starts': 2000,
+            'learning_starts': 0, # TODO > 0 for epsilon greedy
             'target_update_freq': 10000,
             'replay_buffer_size': int(1e6),
             'num_timesteps': int(2e8),

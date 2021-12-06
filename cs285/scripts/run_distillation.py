@@ -84,8 +84,7 @@ def main():
     # Distillation parameters
     # Teacher
     parser.add_argument('--distill_policy', type=str, default='CnnPolicy')
-    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/' + \
-        'FreewayNoFrameskip-v0-n_steps128-batch_size256-timesteps10000000.0-2021:12:03_07:07:59')
+    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/2021-12-05_04:26:45_envFreewayNoFrameskip-v0_n_iters10000000.zip')
 
     # Student
     parser.add_argument('--temperature', type=int, default=0.01)
@@ -100,7 +99,7 @@ def main():
     params['num_critic_updates_per_agent_update'] = 1
     params['exploit_weight_schedule'] = ConstantSchedule(1.0)
     params['video_log_freq'] = -1 # This param is not used for DQN
-    params['eps'] = 0.2
+    params['eps'] = 0.05
     ##################################
     ### CREATE DIRECTORY FOR LOGGING
     ##################################
@@ -116,7 +115,7 @@ def main():
     
     # NOTE: had to change this for each environment
     if params['env_name']=='FreewayNoFrameskip-v0':
-        params['ep_len']=128
+        params['ep_len']=1e6
     
     if params['use_rnd']:
         params['explore_weight_schedule'] = PiecewiseSchedule([(0,1), (params['num_exploration_steps'], 0)], outside_value=0.0)

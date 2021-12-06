@@ -245,6 +245,33 @@ class RL_Trainer(object):
 
         return paths, envsteps_this_batch, train_video_paths
 
+    def collect_eval_trajectories(self, collect_policy, num_transitions_to_sample):
+        """
+        :param collect_policy:  the current policy using which we collect data
+        :param num_transitions_to_sample:  the number of transitions we collect
+        :return:
+            paths: a list trajectories
+            envsteps_this_batch: the sum over the numbers of environment steps in paths
+            train_video_paths: paths which also contain videos for visualization purposes
+        """
+        # collect data to be used for eval
+        print("\nCollecting data to be used for eval...")
+        # print(self.params['ep_len'])
+        paths, envsteps_this_batch = utils.sample_trajectories(
+            self.eval_env, 
+            collect_policy, 
+            num_transitions_to_sample, 
+            self.params['ep_len']
+        )
+
+        # collect more rollouts with the same policy, to be saved as videos in tensorboard
+        train_video_paths = None
+        if self.logvideo:
+            print('\nCollecting train rollouts to be used for saving videos...')
+            train_video_paths = utils.sample_n_trajectories(self.eval_env, collect_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
+
+        return paths, envsteps_this_batch, train_video_paths
+
     def train_agent(self):
         all_logs = []
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
@@ -284,8 +311,12 @@ class RL_Trainer(object):
 
         logs.update(last_log)
         
-        eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self.eval_env, self.agent.eval_policy, self.params['eval_batch_size'], self.params['ep_len'])
-        
+        # eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self.eval_env, self.agent.eval_policy, self.params['eval_batch_size'], self.params['ep_len'])
+        eval_paths, eval_envsteps_this_batch, eval_train_video_paths = self.collect_eval_trajectories(
+            self.agent.eval_policy, 
+            self.params['eval_batch_size']
+        )
+
         eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
         eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
 
