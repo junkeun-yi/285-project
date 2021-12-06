@@ -37,10 +37,9 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # forward network: given a_t, phi(s_t), predict phi(s_t+1)
         # inverse network: given phi(s_t), phi(s_t+1), predict a_t
         # TODO: model specifications should follow original Curiosity paper.
-
+        # Note: Eta moved to distillation_agent
         self.feat_size = 288 # TODO: FIND THIS FROM CNN
         self.beta = 0.2 # TODO: Make parameter 
-        self.eta = 0.01 # TODO: make ICM ETA parameter
 
         self.feat_encoder = ptu.build_feat_encoder(self.ob_dim[-1])
         
