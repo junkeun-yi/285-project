@@ -4,8 +4,6 @@ from stable_baselines3.common.evaluation import evaluate_policy
 import argparse
 import os
 
-
-
 def evaluate_model(args):
     env_name = args['env']
     env = make_atari_env(env_name)
@@ -34,7 +32,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env',
         choices=[
-            "FreewayNoFrameskip-v0",
+            "FreewayNoFrameskip-v0", # standard ppo returns 32.5
+            "BeamRiderNoFrameskip-v4", # standard ppo returns 1590
+            "BowlingNoFrameskip-v4", # standard ppo returns 40.1
+            "PongNoFrameskip-v4", # standard ppo returns 20.7
+            "MsPacmanNoFrameskip-v4", # standard ppo returns 2096
+            "MontezumaRevengeNoFrameskip-v4", # standard ppo returns 42
+            "UpNDownNoFrameskip-v4", # standard ppo returns 95445
         ],
         default="FreewayNoFrameskip-v0"
     )
@@ -54,8 +58,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--render',
-        type=bool,
-        default=False
+        action='store_true'
     )
 
     args = vars(parser.parse_args())

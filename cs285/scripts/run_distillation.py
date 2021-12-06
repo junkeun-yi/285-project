@@ -49,7 +49,7 @@ def main():
 
     parser.add_argument('--exp_name', type=str, default='todo')
 
-    parser.add_argument('--eval_batch_size', type=int, default=1000)
+    parser.add_argument('--eval_batch_size', type=int, default=10)
     parser.add_argument('--batch_size', type=int, default=256)
 
     parser.add_argument('--use_rnd', action='store_true')
@@ -84,8 +84,7 @@ def main():
     # Distillation parameters
     # Teacher
     parser.add_argument('--distill_policy', type=str, default='CnnPolicy')
-    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/' + \
-        'FreewayNoFrameskip-v0-n_steps128-batch_size256-timesteps10000000.0-2021:12:03_07:07:59')
+    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/2021-12-05_04:26:45_envFreewayNoFrameskip-v0_n_iters10000000.zip')
 
     # Student
     parser.add_argument('--temperature', type=int, default=0.01)
@@ -100,7 +99,7 @@ def main():
     params['num_critic_updates_per_agent_update'] = 1
     params['exploit_weight_schedule'] = ConstantSchedule(1.0)
     params['video_log_freq'] = -1 # This param is not used for DQN
-    params['eps'] = 0.2
+    params['eps'] = 0.05
     ##################################
     ### CREATE DIRECTORY FOR LOGGING
     ##################################

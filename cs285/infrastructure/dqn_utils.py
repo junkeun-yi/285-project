@@ -122,7 +122,7 @@ def get_env_kwargs(env_name):
         def freeway_empty_wrapper(env):
             return env
         kwargs = {
-            'learning_starts': 2000,
+            'learning_starts': 2000, # TODO > 0 for epsilon greedy
             'target_update_freq': 10000,
             'replay_buffer_size': int(1e6),
             'num_timesteps': int(2e8),
@@ -135,7 +135,7 @@ def get_env_kwargs(env_name):
             'gamma': 0.99,
         }
         kwargs['optimizer_spec'] = atari_optimizer(kwargs['num_timesteps'])
-        kwargs['exploration_schedule'] = atari_exploration_schedule(kwargs['num_timesteps'])
+        kwargs['exploration_schedule'] = distill_exploration_schedule(kwargs['num_timesteps'])
         
 
     else:
@@ -192,6 +192,9 @@ def atari_exploration_schedule(num_timesteps):
             (num_timesteps / 8, 0.01),
         ], outside_value=0.01
     )
+
+def distill_exploration_schedule(num_timesteps):
+    return ConstantSchedule(0.05)
 
 
 def atari_ram_exploration_schedule(num_timesteps):

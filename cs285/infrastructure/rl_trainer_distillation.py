@@ -245,6 +245,33 @@ class RL_Trainer(object):
 
         return paths, envsteps_this_batch, train_video_paths
 
+    def collect_eval_trajectories(self, collect_policy, num_transitions_to_sample):
+        """
+        :param collect_policy:  the current policy using which we collect data
+        :param num_transitions_to_sample:  the number of transitions we collect
+        :return:
+            paths: a list trajectories
+            envsteps_this_batch: the sum over the numbers of environment steps in paths
+            train_video_paths: paths which also contain videos for visualization purposes
+        """
+        # collect data to be used for eval
+        print("\nCollecting data to be used for eval...")
+        # print(self.params['ep_len'])
+        paths, envsteps_this_batch = utils.sample_trajectories(
+            self.eval_env, 
+            collect_policy, 
+            num_transitions_to_sample, 
+            self.params['ep_len']
+        )
+
+        # collect more rollouts with the same policy, to be saved as videos in tensorboard
+        train_video_paths = None
+        if self.logvideo:
+            print('\nCollecting train rollouts to be used for saving videos...')
+            train_video_paths = utils.sample_n_trajectories(self.eval_env, collect_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
+
+        return paths, envsteps_this_batch, train_video_paths
+
     def train_agent(self):
         all_logs = []
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
@@ -255,6 +282,41 @@ class RL_Trainer(object):
 
     ####################################
     ####################################
+
+    def evaluate_policy(self, policy):
+        """
+            Step the environment until num_eval_timesteps.
+        """
+        env = self.eval_env
+        max_path_length = self.params['ep_len']
+
+        ob = env.reset()
+        obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
+        paths = []
+        for _ in range(self.params['eval_batch_size']):
+            steps = 0
+            while True:
+                ac = policy.get_action(ob)
+                acs.append(ac)
+                ob, rew, done, _ = env.step(ac)
+                # env.render()
+
+                next_obs.append(ob)
+                rewards.append(rew)
+                steps += 1
+                if done:
+                    terminals.append(1)
+                    env.reset()
+                    break
+                elif steps > max_path_length:
+                    terminals.append(1)
+                    break
+                else:
+                    terminals.append(0)
+            p = utils.Path(obs, image_obs, acs, rewards, next_obs, terminals)
+            paths.append(p)
+
+        return paths
     
     def perform_dqn_logging(self, all_logs):
         last_log = all_logs[-1]
@@ -284,8 +346,11 @@ class RL_Trainer(object):
 
         logs.update(last_log)
         
-        eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self.eval_env, self.agent.eval_policy, self.params['eval_batch_size'], self.params['ep_len'])
-        
+
+        # evaluate the policy
+        eval_paths = self.evaluate_policy(self.agent.eval_policy)
+        # eval_paths = self.evaluate_policy(self.agent.teacher)
+
         eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
         eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
 
