@@ -119,7 +119,7 @@ def get_env_kwargs(env_name):
         }
         kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['num_timesteps'])
 
-    elif 'Freeway' in env_name:
+    elif 'FreewayNoFrameskip-v0' == env_name:
         def freeway_empty_wrapper(env):
             return env
         kwargs = {

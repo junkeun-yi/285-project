@@ -43,7 +43,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--env_name',
-        default='FreewayNoFrameskip-v0',
+        required=True,
         choices=[
             "FreewayNoFrameskip-v0", # standard ppo returns 32.5 (40 million iters)
             "FreewayNoFrameskip-v4", # standard ppo returns 32.5 (40 million iters)
@@ -56,7 +56,7 @@ def main():
         ]
     )
 
-    parser.add_argument('--exp_name', type=str, default='todo')
+    parser.add_argument('--exp_name', type=str, default='')
 
     parser.add_argument('--eval_batch_size', type=int, default=10)
     parser.add_argument('--batch_size', type=int, default=256)
@@ -93,7 +93,7 @@ def main():
     # Distillation parameters
     # Teacher
     parser.add_argument('--distill_policy', type=str, default='CnnPolicy')
-    parser.add_argument('--teacher_chkpt', type=str, default='cs285/teachers/2021-12-05_04:26:45_envFreewayNoFrameskip-v0_n_iters10000000.zip')
+    parser.add_argument('--teacher_chkpt', type=str, required=True)
 
     # Student
     parser.add_argument('--temperature', type=int, default=0.01)
@@ -138,13 +138,22 @@ def main():
         if not params['use_rnd']:
             params['learning_starts'] = params['num_exploration_steps']
 
-    logdir_prefix = 'distill_'
     data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data')
 
     if not (os.path.exists(data_path)):
         os.makedirs(data_path)
 
-    logdir = logdir_prefix + args.exp_name + '_' + args.env_name + '_' + time.strftime("%d-%m-%Y_%H-%M-%S")
+    logdir = 'distill'
+    if args.exp_name:
+        logdir = f"{logdir}_{args.exp_name}_"
+    cleaned_teacher_name = os.path.basename(args.teacher_chkpt).replace('.zip', '')
+    if args.env_name in args.teacher_chkpt:
+        logdir = f"{logdir}_teacher{cleaned_teacher_name}"
+    else:
+        logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{args.env_name}"
+    current_time = time.strftime("%Y%m%d-%H%M%S")
+    logdir = f"{logdir}_{current_time}"
+
     logdir = os.path.join(data_path, logdir)
     params['logdir'] = logdir
     if not(os.path.exists(logdir)):
