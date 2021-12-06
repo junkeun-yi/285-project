@@ -72,10 +72,6 @@ class ICMModel(nn.Module, BaseExplorationModel):
         next_obs = next_ob_no
         acs = ac_na
 
-        if self.flatten_input:
-            obs = obs.reshape((-1, self.ob_dim))
-            next_obs = next_obs.reshape((-1, self.ob_dim))
-
         enc_obs = self.to_feature(obs)
         enc_next_obs = self.to_feature(next_obs)
 
