@@ -2,7 +2,7 @@ from typing import Union
 
 import torch
 from torch import nn
-from cs285.infrastructure.dqn_utils import Flatten
+from cs285.infrastructure.dqn_utils import Flatten, PreprocessAtari
 Activation = Union[str, nn.Module]
 
 
@@ -88,6 +88,7 @@ def build_policy_CNN(input_channels: int,
     # Same structure as dqn conv (0.27 : 1, ours #  params : stable baselines cnn)
 
     cnn = nn.Sequential(
+        PreprocessAtari(),
         nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=8, stride=4),
         nn.ReLU(),
         nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
@@ -106,9 +107,9 @@ def build_policy_CNN(input_channels: int,
 
 def build_feat_encoder(input_channels: int,
                     init_method=None,):
-    # 4 layers (32 channel, 3x3 kernel, stride 2, padding 1) from ICM paper. Returns flattened feat
-
+    # 4 layers (32 channel, 3x3 kernel, stride 2, padding 1) from ICM paper. Returns flattened feat 
     cnn = nn.Sequential(
+        PreprocessAtari(),
         nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=3, stride=2, padding=1),
         nn.ReLU(),
         nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),

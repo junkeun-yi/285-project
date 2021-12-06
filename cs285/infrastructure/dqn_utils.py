@@ -165,7 +165,8 @@ class PreprocessAtari(nn.Module):
         # MJ: I needed to add `contiguous` here;
             # might want to just add this in for students?
         x = x.permute(0, 3, 1, 2).contiguous()
-        return x / 255.
+        return x
+        #return x / 255. #Commented out b/c we grayscale
 
 
 def create_atari_q_network(ob_dim, num_actions):
