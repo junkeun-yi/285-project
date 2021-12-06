@@ -164,6 +164,8 @@ class PreprocessAtari(nn.Module):
     def forward(self, x):
         # MJ: I needed to add `contiguous` here;
             # might want to just add this in for students?
+        if x.dim() < 4: # if input (h,w,c)
+            x = torch.unsqueeze(x,0) #(N,h,w,c)
         x = x.permute(0, 3, 1, 2).contiguous()
         return x
         #return x / 255. #Commented out b/c we grayscale

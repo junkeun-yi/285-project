@@ -6,6 +6,7 @@ from cs285.infrastructure.replay_buffer import ReplayBuffer
 from cs285.infrastructure.utils import *
 from cs285.policies.argmax_policy import ArgMaxPolicy
 from cs285.policies.teacher_policy import DistillationTeacherPolicy
+from cs285.policies.MLP_policy import MLPPolicyDistillationStudent
 from cs285.policies.CNN_policy import CNNPolicyDistillationStudent
 from cs285.infrastructure.dqn_utils import MemoryOptimizedReplayBuffer
 from cs285.exploration.rnd_model import RNDModel

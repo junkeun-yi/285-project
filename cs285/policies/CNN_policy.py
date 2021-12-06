@@ -46,11 +46,9 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         self.training = training
 
         if self.discrete:
-            self.logits_na = ptu.build_mlp(
-                input_size=self.ob_channels, 
-                output_size=self.ac_dim,
-                n_layers=self.n_layers,
-                size=self.size,
+            self.logits_na = ptu.build_policy_CNN(
+                input_channels = self.ob_channels,
+                output_size = self.ac_dim
             )
             self.logits_na.to(ptu.device)
             self.mean_net = None
@@ -99,4 +97,6 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        return loss.item()
 
