@@ -83,6 +83,12 @@ class ICMModel(nn.Module, BaseExplorationModel):
         enc_obs = self.to_feature(obs)
         enc_next_obs = self.to_feature(next_obs)
 
+        # inverse model
+        # f(phi(s_t), phi(s_t+1)) = a_t
+        pred_acs = torch.cat((enc_obs, enc_next_obs)) # TODO: check dimensions
+        pred_acs = self.inverse_net(pred_acs)
+
+
         # forward model
         # f(a_t, phi(s_t)) = phi(s_t+1)
         pred_enc_next_obs = torch.cat((enc_obs, acs)) # TODO: check dimensions
