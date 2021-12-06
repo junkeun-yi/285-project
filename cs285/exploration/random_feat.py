@@ -78,8 +78,7 @@ class RandomFeatModel(ICMModel):
         
         enc_next_obs, pred_enc_next_obs, _ = self.forward(ob_no, next_ob_no, ac_na)
 
-        # TODO: verify how the original ICM paper calculates intrinsic reward
-        intrinsic_reward = self.eta * self.forward_loss(pred_enc_next_obs, enc_next_obs)
+        intrinsic_reward = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
         return ptu.to_numpy(intrinsic_reward)
 
@@ -95,10 +94,7 @@ class RandomFeatModel(ICMModel):
         # forward dynamics
         forward_loss = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
-        # inverse dynamics
-        inverse_loss = self.inverse_loss(pred_acs, ac_na)
-
-        loss = self.beta * forward_loss + (1 - self.beta)*inverse_loss
+        loss = forward_loss
 
         # update networks
         self.optimizer.zero_grad()
