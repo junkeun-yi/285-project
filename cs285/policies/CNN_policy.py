@@ -77,6 +77,11 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
             observations = ptu.from_numpy(observations)
         if isinstance(actions, np.ndarray):
             actions = ptu.from_numpy(actions)
+<<<<<<< HEAD
+=======
+        if isinstance(curiosity_loss, np.ndarray):
+            curiosity_loss = ptu.from_numpy(curiosity_loss)
+>>>>>>> ee1519ca01feeedc21387166f9b8f4e992d3c98c
         
         
         action_dist = self.forward(observations)
