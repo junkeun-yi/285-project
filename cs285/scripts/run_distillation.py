@@ -16,7 +16,6 @@ class Distill_Trainer(object):
             'num_critic_updates_per_agent_update': params['num_critic_updates_per_agent_update'],
             'train_batch_size': params['batch_size'],
             'double_q': params['double_q'],
-            'use_boltzmann': params['use_boltzmann'],
         }
 
         env_args = get_env_kwargs(params['env_name'])
