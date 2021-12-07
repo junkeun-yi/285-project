@@ -51,7 +51,6 @@ class DQNAgent(object):
         self.replay_buffer_idx = self.replay_buffer.store_frame(self.last_obs)  # TODO check
 
         eps = self.exploration.value(self.t)
-        # eps = 0.05  # TODO change back
         
         # TODO use epsilon greedy exploration when selecting action
         perform_random_action = np.random.random() <= eps or self.t < self.learning_starts

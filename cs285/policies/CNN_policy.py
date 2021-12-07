@@ -29,12 +29,7 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
                  temperature=0.01,
                  **kwargs,
                  ):
-        # drop some kwargs that don't apply to the supers
-        kwargs_copy = deepcopy(kwargs)
-        if 'flatten_input' in kwargs_copy:
-            del kwargs_copy['flatten_input']
-
-        super().__init__(**kwargs_copy)
+        super().__init__(**kwargs)
 
         # init vars
         self.ac_dim = ac_dim
@@ -47,8 +42,8 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
 
         if self.discrete:
             self.logits_na = ptu.build_policy_CNN(
-                input_channels = self.ob_channels,
-                output_size = self.ac_dim
+                input_channels=self.ob_channels, 
+                output_size=self.ac_dim,
             )
             self.logits_na.to(ptu.device)
             self.mean_net = None
@@ -75,9 +70,8 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         action = action_distribution.sample()  # don't bother with rsample
         return ptu.to_numpy(action)
 
-    def update(self, observations, actions, act_logits_teacher, adv_n=None):
-        if adv_n is not None:
-            assert False
+    def update(self, observations, actions, act_logits_teacher, curiosity_loss = None, teacher_weight = None):
+        # TODO: Add Uncertainity Weight to parameters of function, incorporate into loss!
         if isinstance(observations, np.ndarray):
             observations = ptu.from_numpy(observations)
         if isinstance(actions, np.ndarray):
@@ -85,14 +79,23 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         if isinstance(adv_n, np.ndarray):
             adv_n = ptu.from_numpy(adv_n)
         
-        # action_dist = self.forward(observations.view(observations.shape[0],-1))
+        
         action_dist = self.forward(observations)
         act_logits_student = action_dist.logits
         
+        # Reward = r_distill + r_curiosity.
+        # r_distill = -KL(student, teacher). It is negative bc O <= KL < inf and we want KL -> 0 (equivalent to max -KL)
         kl_loss = KLDivLoss(reduction='batchmean')
         loss = kl_loss(
             F.log_softmax(act_logits_student, dim=1), 
             F.softmax(act_logits_teacher / self.T, dim=1))
+        if teacher_weight: #If using uncertainity KL loss weighting
+            loss *= teacher_weight
+        
+        # r_curiosity = Internal prediction error (higher is better!). 
+        # => Our optimization becomes max r_distill + r_curiosity  = min -1*(r_distill + r_curiosity) = min KL - r_curiosity
+        if curiosity_loss:
+            loss -= curiosity_loss
 
         self.optimizer.zero_grad()
         loss.backward()

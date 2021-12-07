@@ -1,5 +1,5 @@
 from typing import Union
-
+import numpy as np
 import torch
 from torch import nn
 from cs285.infrastructure.dqn_utils import Flatten, PreprocessAtari
@@ -151,3 +151,13 @@ def ones(*args, **kwargs):
 
 def to_numpy(tensor):
     return tensor.to('cpu').detach().numpy()
+
+def from_numpy_obs_ac_next(ob_no, ac_na, next_ob_no):
+        if isinstance(ob_no, np.ndarray):
+            ob_no = from_numpy(ob_no)
+        if isinstance(next_ob_no, np.ndarray):
+            next_ob_no = from_numpy(next_ob_no)
+        if isinstance(ac_na, np.ndarray):
+            ac_na = from_numpy(ac_na)
+        return ob_no, ac_na, next_ob_no
+

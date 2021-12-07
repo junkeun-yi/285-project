@@ -128,6 +128,15 @@ class RL_Trainer(object):
         # print_period = 1000 if isinstance(self.agent, DistillationAgent) else 1
         print_period = self.params['batch_size']
 
+        # teacher eval
+        self.evaluate_run_policy(self.agent.teacher)
+
+        eval_env_monitor = get_wrapper_by_name(self.eval_env, "Monitor")
+        eval_episode_rewards = eval_env_monitor.get_episode_rewards()
+        eval_returns = eval_episode_rewards[-self.params['eval_batch_size']:]
+
+        self.teacher_avg_return = np.mean(eval_returns)
+
         for itr in range(n_iter):
             if itr % print_period == 0:
                 print("\n\n********** Iteration %i ************"%itr)
@@ -253,23 +262,19 @@ class RL_Trainer(object):
 
     def evaluate_run_policy(self, policy):
         """
-            Step the environment until num_eval_timesteps.
+            Step the environment for [eval_batch_size] episodes
         """
         env = self.eval_env
-        max_path_length = self.params['ep_len']
 
-        ob = env.reset()
         for _ in range(self.params['eval_batch_size']):
-            steps = 0
-            while steps < max_path_length:
+            ob = env.reset()
+            done = False
+            while not done:
                 ac = policy.get_action(ob)
                 ob, rew, done, _ = env.step(ac)
                 # env.render()
-                steps += 1
 
-                if done:
-                    env.reset()
-                    break
+            
     
     def perform_dqn_logging(self, all_logs):
         last_log = all_logs[-1]
@@ -299,22 +304,6 @@ class RL_Trainer(object):
 
         logs.update(last_log)
         
-
-        # evaluate the policy
-        # eval_paths = self.evaluate_policy(self.agent.eval_policy)
-        # eval_paths = self.evaluate_policy(self.agent.teacher)
-
-        # eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
-        # eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
-
-        # logs["Eval_AverageReturn"] = np.mean(eval_returns)
-        # logs["Eval_StdReturn"] = np.std(eval_returns)
-        # logs["Eval_MaxReturn"] = np.max(eval_returns)
-        # logs["Eval_MinReturn"] = np.min(eval_returns)
-        # logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
-        
-        # logs['Buffer size'] = self.agent.replay_buffer.num_in_buffer
-
         # evaluate the policy
         self.evaluate_run_policy(self.agent.actor)
 
@@ -330,6 +319,7 @@ class RL_Trainer(object):
             logs["Eval_MaxReturn"] = np.max(eval_returns)
             logs["Eval_MinReturn"] = np.min(eval_returns)
         logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens) # TODO: fix
+        logs["Teacher_AverageReturn"] = self.teacher_avg_return
 
         sys.stdout.flush()
 

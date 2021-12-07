@@ -18,13 +18,8 @@ def init_method_2(model):
 
 class ICMModel(nn.Module, BaseExplorationModel):
     def __init__(self, hparams, optimizer_spec, **kwargs):
-
-        # drop some kwargs that don't apply to the supers
-        kwargs_copy = deepcopy(kwargs)
-        if 'flatten_input' in kwargs_copy:
-            del kwargs_copy['flatten_input']
         
-        super().__init__(**kwargs_copy)
+        super().__init__(**kwargs)
         self.ob_dim = hparams['ob_dim']
         self.ac_dim = hparams['ac_dim']
         self.n_layers = hparams['n_layers']
@@ -34,10 +29,8 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # ICM: intrinsic curiosity module
         # forward network: given a_t, phi(s_t), predict phi(s_t+1)
         # inverse network: given phi(s_t), phi(s_t+1), predict a_t
-        # TODO: model specifications should follow original Curiosity paper.
-        # Note: Eta moved to distillation_agent
         self.feat_size = 1152
-        self.beta = 0.1 # TODO: Make parameter 
+        self.beta = hparams['curiosity_beta']
 
         self.feat_encoder = ptu.build_feat_encoder(self.ob_dim[-1])
 
@@ -48,8 +41,9 @@ class ICMModel(nn.Module, BaseExplorationModel):
 
         # f(phi(s_t), phi(s_t+1)) = a_t
         # Inverse is 1 hidden layer of 256 units
-        self.inverse_net = ptu.build_mlp(self.feat_size*2, self.ac_dim, 1, 256)
-        self.inverse_loss = nn.CrossEntropyLoss(reduction='mean')
+        if "no_inverse_net" not in hparams:
+            self.inverse_net = ptu.build_mlp(self.feat_size*2, self.ac_dim, 1, 256)
+            self.inverse_loss = nn.CrossEntropyLoss(reduction='mean')
 
         # optimizer
         self.optimizer = self.optimizer_spec.constructor(
@@ -63,71 +57,73 @@ class ICMModel(nn.Module, BaseExplorationModel):
         # send to gpu if possible
         self.to(ptu.device)
 
-    def to_feature(self, obs):
-        return self.feat_encoder(ptu.from_numpy(obs))
+    def to_feature(self, obs: torch.Tensor):
+        return self.feat_encoder(obs)
 
     # return s_{t+1}, s^{hat}_{t+1}, a^{hat}_t
     def forward(self, ob_no, next_ob_no, ac_na):
-        obs = ob_no
-        next_obs = next_ob_no
-        acs = ac_na
+        obs, acs, next_obs = ptu.from_numpy_obs_ac_next(ob_no, ac_na, next_ob_no)
 
+        # Get phi(s_t), phi(s_t+1)
         enc_obs = self.to_feature(obs)
         enc_next_obs = self.to_feature(next_obs)
 
-        # inverse model
-        # f(phi(s_t), phi(s_t+1)) = a_t
-        pred_acs = torch.cat((enc_obs, enc_next_obs)) # TODO: check dimensions
-        pred_acs = self.inverse_net(pred_acs)
-
-
         # forward model
         # f(a_t, phi(s_t)) = phi(s_t+1)
-        pred_enc_next_obs = torch.cat((enc_obs, acs)) # TODO: check dimensions
-        pred_enc_next_obs = self.forward_net(pred_enc_next_obs)
+        pred_enc_next_obs = self.forward_net(
+                                            torch.cat(
+                                                        (enc_obs, F.one_hot(acs.long(),self.ac_dim)), 
+                                                        dim=1
+                                                    )
+                                            )
+
+        # inverse model
+        # f(phi(s_t), phi(s_t+1)) = a_t
+        pred_acs = self.inverse_net(
+                                        torch.cat(
+                                                    (enc_obs, enc_next_obs),
+                                                    dim =1
+                                        )
+                                    )
+
 
         return enc_next_obs, pred_enc_next_obs, pred_acs
 
-
-    def forward_np(self, ob_no, next_ob_no, ac_na):
+    def forward_np(self, ob_no: np.ndarray, next_ob_no:np.ndarray, ac_na:np.ndarray):
         ob_no = ptu.from_numpy(ob_no)
         next_ob_no = ptu.from_numpy(next_ob_no)
         ac_na = ptu.from_numpy(ac_na)
+
         eno, peno, pa = self(ob_no)
         return ptu.to_numpy(eno), ptu.to_numpy(peno), ptu.to_numpy(pa)
 
     # get the intrinsic reward
     # intrinsic reward = difference between (phi(s_t+1), phi(pred_s_t+1))
-    def get_intrinsic_reward(self, ob_no, next_ob_no, ac_na):
-        if isinstance(ob_no, np.ndarray):
-            ob_no = ptu.from_numpy(ob_no)
-        if isinstance(ac_na, np.ndarray):
-            next_ob_no = ptu.from_numpy(ac_na)
-        if isinstance(ac_na, np.ndarray):
-            ac_na = ptu.from_numpy(ac_na)
-        
+    def get_intrinsic_reward(self, ob_no, next_ob_no, ac_na):   
+
+        # Run through forward, inverse model 
         enc_next_obs, pred_enc_next_obs, _ = self.forward(ob_no, next_ob_no, ac_na)
 
-        # TODO: verify how the original ICM paper calculates intrinsic reward
-        # note: adding eta to distillation_agent
         intrinsic_reward = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
-        return ptu.to_numpy(intrinsic_reward)
+        return intrinsic_reward.detach()
 
 
-    # update the ICM model
     # forward: MSE between predicted next state and actual next state
     # inverse: Cross Entropy between predicted actions and actual actions
     def update(self, ob_no, next_ob_no, ac_na):
+        obs, acs, next_obs = ptu.from_numpy_obs_ac_next(ob_no, ac_na, next_ob_no)
+        acs = acs.long()
 
-        enc_next_obs, pred_enc_next_obs, pred_acs = self.forward(ob_no, next_ob_no, ac_na)
+        enc_next_obs, pred_enc_next_obs, pred_acs = self.forward(obs, next_obs, acs)
 
-        # forward dynamics
+        # forward dynamics (predict next state given s_t and a_t)
         forward_loss = self.forward_loss(pred_enc_next_obs, enc_next_obs)
 
-        inverse_loss = self.inverse_loss(pred_acs, ac_na)
+        # Inverse dynamics (predict action which took us from s_t to s_t+1)
+        inverse_loss = self.inverse_loss(pred_acs, acs)
 
-
+        # Get Loss = Beta * L_forward + (1-Beta) * L_inverse
         loss = self.beta * forward_loss + (1-self.beta) * inverse_loss
         
         # update networks
