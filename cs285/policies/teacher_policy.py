@@ -23,7 +23,7 @@ class DistillationTeacherPolicy(nn.Module, metaclass=abc.ABCMeta):
 
     def load(self, filepath):
         # load stable_baselines3 model
-        self.model = PPO.load(os.path.join(os.getcwd(), filepath))
+        self.model = PPO.load(os.path.join(os.getcwd(), filepath), device=ptu.device)
 
     ##################################
 

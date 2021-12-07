@@ -51,6 +51,8 @@ class RL_Trainer(object):
             gpu_id=self.params['which_gpu']
         )
 
+        print(f"PTU device: {ptu.device}")
+
         #############
         ## ENV
         #############
@@ -141,7 +143,7 @@ class RL_Trainer(object):
                 print("\n\n********** Iteration %i ************"%itr)
 
             # decide if videos should be rendered/logged at this iteration
-            if itr % self.params['video_log_freq'] == 0 and self.params['video_log_freq'] != -1:
+            if self.params['video_log_freq'] != -1 and itr % self.params['video_log_freq'] == 0:
                 self.logvideo = True
             else:
                 self.logvideo = False

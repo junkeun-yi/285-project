@@ -86,6 +86,8 @@ def main():
     parser.add_argument("--icm_beta", type=float, default = 0.1)
     parser.add_argument("--use_uncertainty", action="store_true", help="Use our uncertainty based method")
 
+    # parser.add_argument("--device", choices=['auto', 'cuda', 'cpu'])
+
     # video logging
     parser.add_argument("--video_log_freq", action="store_true", help="Store video logs of agent every video_log_freq timesteps")
 
@@ -93,12 +95,16 @@ def main():
 
     # convert to dictionary
     params = vars(args)
+
     print(params["teacher_chkpt"])
     params['double_q'] = True
     params['num_agent_train_steps_per_iter'] = 1
     params['num_critic_updates_per_agent_update'] = 1
     params['exploit_weight_schedule'] = ConstantSchedule(1.0)
-    # params['video_log_freq'] = -1 # This param is not used for DQN
+
+    if params['video_log_freq'] == False:
+        params['video_log_freq'] = -1
+
     params['eps'] = 0.05
 
     # If lazy input --use_icm, assumes we use curiosity
@@ -116,7 +122,9 @@ def main():
 
     # NOTE: had to change this for each environment
     if params['env_name']=='FreewayNoFrameskip-v0':
-        params['ep_len']=128
+        params['ep_len'] = 128
+    if '-v4' in params['env_name']:
+        params['ep_len'] = 128
 
     data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data')
 
@@ -132,15 +140,15 @@ def main():
     else:
         logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{args.env_name}"
 
-        # Adding distillation method name to logdir name (inefficient, but wrote it this way for code readability)
-        if params["use_uncertainty"]:
-            logdir += "_Uncertainty_"
+    # Adding distillation method name to logdir name (inefficient, but wrote it this way for code readability)
+    if params["use_uncertainty"]:
+        logdir += "_Uncertainty"
 
-        if params['use_curiosity']:
-            if params['use_icm']:
-                logdir += "_ICM"
-            else:
-                logdir += "_RandomFeatCurious"
+    if params['use_curiosity']:
+        if params['use_icm']:
+            logdir += "_ICM"
+        else:
+            logdir += "_RandomFeatCurious"
 
 
     current_time = time.strftime("%Y%m%d-%H%M%S")
