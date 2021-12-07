@@ -34,7 +34,8 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         self.ob_channels = ob_dim[-1] #Assuming ob_dim is (H,W,C)
         self.learning_rate = learning_rate
         self.training = training
-
+        self.discrete = discrete
+        
         if self.discrete:
             self.logits_na = ptu.build_policy_CNN(
                 input_channels=self.ob_channels, 
