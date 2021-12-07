@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Tuple
 from cs285.infrastructure import pytorch_util as ptu
 from .base_exploration_model import BaseExplorationModel
 import numpy as np
@@ -71,7 +71,7 @@ class RandomFeatCuriosity(nn.Module, BaseExplorationModel):
         return enc_obs, enc_next_obs, pred_enc_next_obs
 
     # Returns LIST (to handle varying number of forward outputs)
-    def forward_np(self, ob_no: np.ndarray, next_ob_no:np.ndarray, ac_na:np.ndarray):
+    def forward_np(self, ob_no: np.ndarray, next_ob_no:np.ndarray, ac_na:np.ndarray) -> List[np.ndarray]:
         # Convert to tensor
         obs = ptu.from_numpy(ob_no)
         next_obs = ptu.from_numpy(next_ob_no)
