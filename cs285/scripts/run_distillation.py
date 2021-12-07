@@ -132,13 +132,13 @@ def main():
         os.makedirs(data_path)
 
     logdir = 'distill'
-    if args.exp_name:
-        logdir = f"{logdir}_{args.exp_name}_"
-    cleaned_teacher_name = os.path.basename(args.teacher_chkpt).replace('.zip', '')
-    if args.env_name in args.teacher_chkpt:
+    if params['exp_name']:
+        logdir = f"{logdir}_{params['exp_name']}_"
+    cleaned_teacher_name = os.path.basename(params['teacher_chkpt']).replace('.zip', '')
+    if params['env_name'] in params['teacher_chkpt']:
         logdir = f"{logdir}_teacher{cleaned_teacher_name}"
     else:
-        logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{args.env_name}"
+        logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{params['env_name']}"
 
     # Adding distillation method name to logdir name (inefficient, but wrote it this way for code readability)
     if params["use_uncertainty"]:
@@ -149,7 +149,7 @@ def main():
             logdir += "_ICM"
         else:
             logdir += "_RandomFeatCurious"
-
+        logdir += f"_curiosity-weight{params['curiosity_weight']}"
 
     current_time = time.strftime("%Y%m%d-%H%M%S")
     logdir = f"{logdir}_{current_time}"
