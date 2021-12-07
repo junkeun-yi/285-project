@@ -4,6 +4,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 import argparse
 import os
 import csv
+from tqdm import tqdm
 
 env_choices = [
             "FreewayNoFrameskip-v0", # standard ppo returns 32.5 (40 million iters)
@@ -17,9 +18,9 @@ env_choices = [
             "DO-ALL"
         ]
 
-def evaluate_model(env_name, teacher_chkpt_name, n_eval_episodes, render):
+def evaluate_model(env_name, teacher_chkpt_name, n_eval_episodes, render, device):
     env = make_atari_env(env_name)
-    model = PPO.load(teacher_chkpt_name)
+    model = PPO.load(teacher_chkpt_name, device=device)
 
     mean, std = evaluate_policy(
         model, 
@@ -43,6 +44,7 @@ def main(args):
     output_csv_loc = args['output_csv_loc']
     n_eval_episodes = args['n_eval_episodes']
     render = args['render']
+    device = args['device']
 
     if env_name == "DO-ALL":
         os.makedirs(os.path.dirname(output_csv_loc), exist_ok=True)
@@ -50,7 +52,7 @@ def main(args):
             fieldnames = ['teacher_name', 'env', 'n_iters', 'mean', 'std', 'n_eval_episodes']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
-            for teacher_chkpt in os.listdir(teacher_chkpt_loc):
+            for teacher_chkpt in tqdm(os.listdir(teacher_chkpt_loc)):
                 teacher_chkpt_name = os.path.join(teacher_chkpt_loc, teacher_chkpt)
                 try:
                     env_name=None
@@ -61,7 +63,7 @@ def main(args):
                             env_name = teacher_name_value.replace('env', '')
                         if 'iters' in teacher_name_value:
                             n_iters = teacher_name_value.replace('iters', '')
-                    info_dict = evaluate_model(env_name, teacher_chkpt_name, n_eval_episodes, render)
+                    info_dict = evaluate_model(env_name, teacher_chkpt_name, n_eval_episodes, render, device)
                     info_dict['env'] = env_name
                     info_dict['n_iters'] = n_iters
                     writer.writerow(info_dict)
@@ -70,7 +72,7 @@ def main(args):
                     print(f"Failed to eval teacher, {teacher_chkpt_name}. {e}")
     else:
         teacher_chkpt_name = teacher_chkpt_loc
-        info_dict = evaluate_model(env_name, teacher_chkpt_name, n_eval_episodes, render)
+        info_dict = evaluate_model(env_name, teacher_chkpt_name, n_eval_episodes, render, device)
         print(info_dict)
 
 if __name__ == '__main__':
@@ -104,6 +106,14 @@ if __name__ == '__main__':
         type=str,
         default='evalppo_logs/evalppo.csv',
         help="location to output csv of teachername, evaluation pairs. Only used when using DO-ALL"
+    )
+
+    parser.add_argument(
+        '--device',
+        type=str,
+        choices=['auto', 'cuda', 'cpu'],
+        default='auto',
+        help="pytorch device to eval on"
     )
 
     args = vars(parser.parse_args())
