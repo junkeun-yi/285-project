@@ -87,7 +87,7 @@ def main():
     parser.add_argument("--use_icm", action="store_true")
     parser.add_argument("--curiosity_weight", type=float, default=0.1)
     parser.add_argument("--icm_beta", type=float, default = 0.1)
-    parser.add_argument("--use_uncertainity", action="store_true", help="Use our Uncertainity based method (unless o.w. uses Random Feat)")
+    parser.add_argument("--use_uncertainity", action="store_true", help="Use our Uncertainity based method")
 
     args = parser.parse_args()
 
@@ -101,11 +101,6 @@ def main():
     params['video_log_freq'] = -1 # This param is not used for DQN
     params['eps'] = 0.05
 
-    # If using our method, must use curiosity (default if user only types --use_uncertainity is Random Feat curiosity)
-    if params["use_uncertainity"] and not params["use_curiosity"]:
-        params["use_curiosity"] = True
-    
-    
     # NOTE: had to change this for each environment
     if params['env_name']=='FreewayNoFrameskip-v0':
         params['ep_len']=128
