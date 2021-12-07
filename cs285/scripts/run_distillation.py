@@ -68,8 +68,6 @@ def main():
     parser.add_argument('--scalar_log_freq', type=int, default=256) # make same as batch size
     parser.add_argument('--save_params', action='store_true')
 
-    parser.add_argument('--use_boltzmann', action='store_true')
-
     # for DQNAgent
     parser.add_argument('--n_layers', type=int, default=4)
     parser.add_argument('--size', type=int, default=512)
@@ -103,6 +101,9 @@ def main():
 
     # If lazy input --use_icm, assumes we use curiosity
     if not params['use_curiosity'] and params['use_icm']:
+        params['use_curiosity'] = True
+    
+    if params['use_uncertainity'] and not params['use_curiosity']:
         params['use_curiosity'] = True
 
     # NOTE: had to change this for each environment
