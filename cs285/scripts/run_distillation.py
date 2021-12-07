@@ -86,6 +86,9 @@ def main():
     parser.add_argument("--icm_beta", type=float, default = 0.1)
     parser.add_argument("--use_uncertainity", action="store_true", help="Use our Uncertainity based method")
 
+    # video logging
+    parser.add_argument("--video_log_freq", action="store_true", help="Store video logs of agent every video_log_freq timesteps")
+
     args = parser.parse_args()
 
     # convert to dictionary
@@ -95,7 +98,7 @@ def main():
     params['num_agent_train_steps_per_iter'] = 1
     params['num_critic_updates_per_agent_update'] = 1
     params['exploit_weight_schedule'] = ConstantSchedule(1.0)
-    params['video_log_freq'] = -1 # This param is not used for DQN
+    # params['video_log_freq'] = -1 # This param is not used for DQN
     params['eps'] = 0.05
 
     # If lazy input --use_icm, assumes we use curiosity

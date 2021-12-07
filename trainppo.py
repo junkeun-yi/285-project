@@ -98,7 +98,7 @@ def train_model(arguments):
         seed=seed
     )
 
-    model.learn(total_timesteps=n_iters, callback=callback)
+    model.learn(total_timesteps=n_iters, callback=callback, tb_log_name=save_name)
     model.save(save_dir + save_name + f"n_iters{n_iters}")
 
 if __name__ == '__main__':

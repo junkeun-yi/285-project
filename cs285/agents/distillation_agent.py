@@ -81,3 +81,6 @@ class DistillationAgent(DQNAgent):
         # TODO: Return avg cross entropy between o.g. action logits and new action logits
         pass
         
+    
+    def get_action(self, ob):
+        return self.actor.get_action(ob)

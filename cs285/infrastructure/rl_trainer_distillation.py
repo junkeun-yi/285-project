@@ -14,7 +14,6 @@ from cs285.infrastructure import pytorch_util as ptu
 from cs285.infrastructure import utils
 from cs285.infrastructure.logger import Logger
 
-from cs285.agents.explore_or_exploit_agent import ExplorationOrExploitationAgent
 from cs285.agents.distillation_agent import DistillationAgent
 from cs285.infrastructure.dqn_utils import (
         get_wrapper_by_name,
@@ -172,7 +171,8 @@ class RL_Trainer(object):
             all_logs = self.train_agent()
 
             # log
-            if (self.logvideo or self.logmetrics):
+            # if (self.logvideo or self.logmetrics):
+            if self.logmetrics:
                 print('\nBeginning logging procedure...')
                 self.perform_dqn_logging(np.array(all_logs))
 
@@ -303,7 +303,13 @@ class RL_Trainer(object):
             logs["TimeSinceStart"] = time_since_start
 
         logs.update(last_log)
-        
+
+        # video logging
+        if self.logvideo:
+            print('\nCollecting train rollouts to be used for saving videos...')
+            train_video_paths = utils.sample_n_trajectories(self.env, self.agent, MAX_NVIDEO, MAX_VIDEO_LEN, True)
+            self.logger.log_paths_as_videos(train_video_paths, self.agent.t, max_videos_to_save=MAX_NVIDEO, fps=self.fps, video_title='train_rollouts')
+
         # evaluate the policy
         self.evaluate_run_policy(self.agent.actor)
 

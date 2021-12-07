@@ -97,3 +97,8 @@ arguments include:
 - ☐ train multiple level teachers across all environments (in progress)
 - ☑ identify evaluation tasks (Akash)
 - ☐ Add uncertainity weighting
+    - color jitter/blackout (random erasing)/gaussian blur
+    - rotation (small)
+    - pad + reinterpolation
+    - randomadjustsharpness? randomautocontrast?
+    - 
