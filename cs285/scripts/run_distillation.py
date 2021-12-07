@@ -16,6 +16,7 @@ class Distill_Trainer(object):
             'num_critic_updates_per_agent_update': params['num_critic_updates_per_agent_update'],
             'train_batch_size': params['batch_size'],
             'double_q': params['double_q'],
+            'use_boltzmann': params['use_boltzmann'],
         }
 
         env_args = get_env_kwargs(params['env_name'])
@@ -84,7 +85,7 @@ def main():
     parser.add_argument("--use_icm", action="store_true")
     parser.add_argument("--curiosity_weight", type=float, default=0.1)
     parser.add_argument("--icm_beta", type=float, default = 0.1)
-    parser.add_argument("--use_uncertainity", action="store_true", help="Use our Uncertainity based method")
+    parser.add_argument("--use_uncertainty", action="store_true", help="Use our uncertainty based method")
 
     args = parser.parse_args()
 
@@ -102,7 +103,7 @@ def main():
     if not params['use_curiosity'] and params['use_icm']:
         params['use_curiosity'] = True
     
-    if params['use_uncertainity'] and not params['use_curiosity']:
+    if params['use_uncertainty'] and not params['use_curiosity']:
         params['use_curiosity'] = True
 
     # NOTE: had to change this for each environment
@@ -127,6 +128,18 @@ def main():
         logdir = f"{logdir}_teacher{cleaned_teacher_name}"
     else:
         logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{args.env_name}"
+
+        # Adding method to logdir name (inefficient, but wrote like this for code readability)
+        if params["use_uncertainty"]:
+            logdir += "_Uncertainty_"
+
+        if params['use_curiosity']:
+            if params['use_icm']:
+                logdir += "_ICM"
+            else:
+                logdir += "_RandomFeatCurious"
+
+
     current_time = time.strftime("%Y%m%d-%H%M%S")
     logdir = f"{logdir}_{current_time}"
 

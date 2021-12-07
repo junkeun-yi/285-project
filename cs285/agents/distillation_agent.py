@@ -44,7 +44,7 @@ class DistillationAgent(DQNAgent):
                 print("Using Random Features")
                 self.exploration_model = RandomFeatModel(agent_params, self.optimizer_spec)
         
-        self.uncertainity_aware = self.agent_params["use_uncertainity"] #TODO: Implement!
+        self.uncertainity_aware = self.agent_params["use_uncertainty"] #TODO: Implement!
 
         self.eval_policy = self.actor
 
