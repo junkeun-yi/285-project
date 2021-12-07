@@ -70,14 +70,13 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         action = action_distribution.sample()  # don't bother with rsample
         return ptu.to_numpy(action)
 
-    def update(self, observations, actions, act_logits_teacher, curiosity_loss = None, teacher_weight = None):
+    def update(self, observations, actions, act_logits_teacher, 
+                curiosity_loss: torch.Tensor = None, teacher_weight: torch.Tensor = None):
         # TODO: Add Uncertainity Weight to parameters of function, incorporate into loss!
         if isinstance(observations, np.ndarray):
             observations = ptu.from_numpy(observations)
         if isinstance(actions, np.ndarray):
             actions = ptu.from_numpy(actions)
-        if isinstance(adv_n, np.ndarray):
-            adv_n = ptu.from_numpy(adv_n)
         
         
         action_dist = self.forward(observations)
