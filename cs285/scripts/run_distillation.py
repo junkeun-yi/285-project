@@ -61,20 +61,6 @@ def main():
     parser.add_argument('--eval_batch_size', type=int, default=3)
     parser.add_argument('--batch_size', type=int, default=256)
 
-    parser.add_argument('--use_rnd', action='store_true')
-    parser.add_argument('--num_exploration_steps', type=int, default=10000)
-    parser.add_argument('--unsupervised_exploration', action='store_true')
-
-    parser.add_argument('--offline_exploitation', action='store_true')
-    parser.add_argument('--cql_alpha', type=float, default=0.0)
-
-    parser.add_argument('--exploit_rew_shift', type=float, default=0.0)
-    parser.add_argument('--exploit_rew_scale', type=float, default=1.0)
-
-    parser.add_argument('--rnd_output_size', type=int, default=5)
-    parser.add_argument('--rnd_n_layers', type=int, default=2)
-    parser.add_argument('--rnd_size', type=int, default=400)
-
     parser.add_argument('--seed', type=int, default=2)
     parser.add_argument('--no_gpu', '-ngpu', action='store_true')
     parser.add_argument('--which_gpu', '-gpu_id', default=0)
@@ -97,6 +83,11 @@ def main():
 
     # Student
     parser.add_argument('--temperature', type=int, default=0.01)
+    parser.add_argument("--use_curiosity", action="store_true")
+    parser.add_argument("--use_icm", action="store_true")
+    parser.add_argument("--curiosity_weight", type=float, default=0.1)
+    parser.add_argument("--icm_beta", type=float, default = 0.1)
+    parser.add_argument("--use_uncertainity", action="store_true", help="Use our Uncertainity based method (unless o.w. uses Random Feat)")
 
     args = parser.parse_args()
 
@@ -109,34 +100,20 @@ def main():
     params['exploit_weight_schedule'] = ConstantSchedule(1.0)
     params['video_log_freq'] = -1 # This param is not used for DQN
     params['eps'] = 0.05
-    ##################################
-    ### CREATE DIRECTORY FOR LOGGING
-    ##################################
 
-    # if params['env_name']=='PointmassEasy-v0':
-    #     params['ep_len']=50
-    # if params['env_name']=='PointmassMedium-v0':
-    #     params['ep_len']=150
-    # if params['env_name']=='PointmassHard-v0':
-    #     params['ep_len']=100
-    # if params['env_name']=='PointmassVeryHard-v0':
-    #     params['ep_len']=200
+    # If using our method, must use curiosity (default if user only types --use_uncertainity is Random Feat curiosity)
+    if params["use_uncertainity"] and not params["use_curiosity"]:
+        params["use_curiosity"] = True
+    
     
     # NOTE: had to change this for each environment
     if params['env_name']=='FreewayNoFrameskip-v0':
         params['ep_len']=128
     
-    if params['use_rnd']:
-        params['explore_weight_schedule'] = PiecewiseSchedule([(0,1), (params['num_exploration_steps'], 0)], outside_value=0.0)
+    if params['use_curiosity']:
+        params['explore_weight_schedule'] = ConstantSchedule(params['curiosity_weight'])
     else:
         params['explore_weight_schedule'] = ConstantSchedule(0.0)
-
-    if params['unsupervised_exploration']:
-        params['explore_weight_schedule'] = ConstantSchedule(1.0)
-        params['exploit_weight_schedule'] = ConstantSchedule(0.0)
-        
-        if not params['use_rnd']:
-            params['learning_starts'] = params['num_exploration_steps']
 
     data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data')
 
