@@ -16,7 +16,6 @@ class Distill_Trainer(object):
             'num_critic_updates_per_agent_update': params['num_critic_updates_per_agent_update'],
             'train_batch_size': params['batch_size'],
             'double_q': params['double_q'],
-            'use_boltzmann': params['use_boltzmann'],
         }
 
         env_args = get_env_kwargs(params['env_name'])
@@ -67,8 +66,6 @@ def main():
     # parser.add_argument('--scalar_log_freq', type=int, default=int(1e3))
     parser.add_argument('--scalar_log_freq', type=int, default=256) # make same as batch size
     parser.add_argument('--save_params', action='store_true')
-
-    parser.add_argument('--use_boltzmann', action='store_true')
 
     # for DQNAgent
     parser.add_argument('--n_layers', type=int, default=4)
