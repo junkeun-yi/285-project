@@ -62,26 +62,6 @@ class RL_Trainer(object):
         # we only want one env, so pop to get the environment.
         self.env = make_atari_env(self.params['env_name']).envs.pop()
         self.eval_env = make_atari_env(self.params['env_name']).envs.pop()
-        # TODO: make sure logging is done correctly
-        # if not ('pointmass' in self.params['env_name']):
-        #     import matplotlib
-        #     matplotlib.use('Agg')
-        #     self.env.set_logdir(self.params['logdir'] + '/expl_')
-        #     self.eval_env.set_logdir(self.params['logdir'] + '/eval_')
-            
-        # if 'env_wrappers' in self.params:
-        #     # These operations are currently only for Atari envs
-        #     self.env = wrappers.Monitor(self.env, os.path.join(self.params['logdir'], "gym"), force=True)
-        #     self.eval_env = wrappers.Monitor(self.eval_env, os.path.join(self.params['logdir'], "gym"), force=True)
-        #     self.env = params['env_wrappers'](self.env)
-        #     self.eval_env = params['env_wrappers'](self.eval_env)
-        #     self.mean_episode_reward = -float('nan')
-        #     self.best_mean_episode_reward = -float('inf')
-        # if 'non_atari_colab_env' in self.params and self.params['video_log_freq'] > 0:
-        #     self.env = wrappers.Monitor(self.env, os.path.join(self.params['logdir'], "gym"), write_upon_reset=True)#, force=True)
-        #     self.eval_env = wrappers.Monitor(self.eval_env, os.path.join(self.params['logdir'], "gym"), write_upon_reset=True)
-        #     self.mean_episode_reward = -float('nan')
-        #     self.best_mean_episode_reward = -float('inf')
 
         # initial status
         self.mean_episode_reward = -float('nan')
@@ -182,30 +162,18 @@ class RL_Trainer(object):
             # train the agent
             all_logs = self.train_agent()
 
-            # log / save
+            # log
             if (self.logvideo or self.logmetrics):
                 print('\nBeginning logging procedure...')
                 self.perform_dqn_logging(np.array(all_logs))
-
-                if self.params['save_params']:
-                    self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
 
             # Log densities and output trajectories
             # TODO: make sure we can use later
             # if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
             #     self.dump_density_graphs(itr)
 
-            # TODO: validate below if statement
-            # log/save
-            # if itr > 0 and itr%self.params['batch_size']==0 and (self.logvideo or self.logmetrics):
-            # # if itr > 0 and (self.logvideo or self.logmetrics):
-            #     # perform logging
-            #     print('\nBeginning logging procedure...')
-            #     # self.perform_logging(itr, paths, eval_policy, train_video_paths, np.array(all_logs))
-            #     self.perform_dqn_logging(np.array(all_logs))
-
-            #     if self.params['save_params']:
-            #         self.agent.save('{}/agent_itr_{}.pt'.format(self.params['logdir'], itr))
+        if self.params['save_params']:
+            self.agent.actor.save(f"{self.params['logdir']}/student_chkpt_n_iter{n_iter}.pt")
 
     ####################################
     ####################################
