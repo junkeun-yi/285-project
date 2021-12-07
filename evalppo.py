@@ -47,25 +47,37 @@ def main(args):
     device = args['device']
 
     if env_name == "DO-ALL":
+        # check if the output is already there, if so read done values into a map
+        known_values = {}
+        if os.path.exists(output_csv_loc):
+            with open(output_csv_loc) as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    known_values[row['teacher_name']] = row
         os.makedirs(os.path.dirname(output_csv_loc), exist_ok=True)
         with open(output_csv_loc, 'w') as csvfile:
             fieldnames = ['teacher_name', 'env', 'n_iters', 'mean', 'std', 'n_eval_episodes']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
-            for teacher_chkpt in tqdm(os.listdir(teacher_chkpt_loc)):
+            for teacher_chkpt in os.listdir(teacher_chkpt_loc):
                 teacher_chkpt_name = os.path.join(teacher_chkpt_loc, teacher_chkpt)
                 try:
-                    env_name=None
-                    n_iters='unknown'
-                    teacher_name_values = teacher_chkpt.replace('.zip', '').split('_')
-                    for teacher_name_value in teacher_name_values:
-                        if 'env' in teacher_name_value:
-                            env_name = teacher_name_value.replace('env', '')
-                        if 'iters' in teacher_name_value:
-                            n_iters = teacher_name_value.replace('iters', '')
-                    info_dict = evaluate_model(env_name, teacher_chkpt_name, n_eval_episodes, render, device)
-                    info_dict['env'] = env_name
-                    info_dict['n_iters'] = n_iters
+                    print(f"Evaluating {teacher_chkpt_name}...")
+                    if teacher_chkpt_name in known_values:
+                        print('Using known value in previous csv...')
+                        info_dict = known_values[teacher_chkpt_name]
+                    else:
+                        env_name=None
+                        n_iters='unknown'
+                        teacher_name_values = teacher_chkpt.replace('.zip', '').split('_')
+                        for teacher_name_value in teacher_name_values:
+                            if 'env' in teacher_name_value:
+                                env_name = teacher_name_value.replace('env', '')
+                            if 'iters' in teacher_name_value:
+                                n_iters = teacher_name_value.replace('iters', '')
+                        info_dict = evaluate_model(env_name, teacher_chkpt_name, n_eval_episodes, render, device)
+                        info_dict['env'] = env_name
+                        info_dict['n_iters'] = n_iters
                     writer.writerow(info_dict)
                     print(info_dict)
                 except Exception as e:

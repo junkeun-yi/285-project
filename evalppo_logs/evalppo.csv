@@ -63,6 +63,7 @@ cs285/teachers/envPongNoFrameskip-v4_20211206-021704_n_iters2000000.zip,PongNoFr
 cs285/teachers/envQbertNoFrameskip-v4_20211206-021759_n_iters100000.zip,QbertNoFrameskip-v4,100000,150.0,0.0,10
 cs285/teachers/envFreewayNoFrameskip-v0_20211206-210725_n_iters20000.zip,FreewayNoFrameskip-v0,20000,21.5,1.6278820596099706,10
 cs285/teachers/envQbertNoFrameskip-v4_20211206-021759_n_iters10000000.zip,QbertNoFrameskip-v4,10000000,5582.5,1664.9718466088248,10
+cs285/teachers/envUpNDownNoFrameskip-v4_20211206-021938_n_iters40000000.zip,UpNDownNoFrameskip-v4,40000000,383208.0,85167.7463362745,10
 cs285/teachers/envPongNoFrameskip-v4_20211206-021704_n_iters10000000.zip,PongNoFrameskip-v4,10000000,20.0,0.0,10
 cs285/teachers/envMsPacmanNoFrameskip-v4_20211206-021910_n_iters2000000.zip,MsPacmanNoFrameskip-v4,2000000,704.0,309.03721458749914,10
 cs285/teachers/envQbertNoFrameskip-v4_20211206-021759_n_iters5000000.zip,QbertNoFrameskip-v4,5000000,4195.0,15.0,10
