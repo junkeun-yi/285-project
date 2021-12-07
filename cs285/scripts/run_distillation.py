@@ -16,7 +16,6 @@ class Distill_Trainer(object):
             'num_critic_updates_per_agent_update': params['num_critic_updates_per_agent_update'],
             'train_batch_size': params['batch_size'],
             'double_q': params['double_q'],
-            'use_boltzmann': params['use_boltzmann'],
         }
 
         env_args = get_env_kwargs(params['env_name'])
@@ -95,7 +94,6 @@ def main():
     params['double_q'] = True
     params['num_agent_train_steps_per_iter'] = 1
     params['num_critic_updates_per_agent_update'] = 1
-    params['exploit_weight_schedule'] = ConstantSchedule(1.0)
     params['video_log_freq'] = -1 # This param is not used for DQN
     params['eps'] = 0.05
 
@@ -103,17 +101,18 @@ def main():
     if not params['use_curiosity'] and params['use_icm']:
         params['use_curiosity'] = True
     
+    # If using our method, curiosity must be on (default is random features curiosity)
     if params['use_uncertainty'] and not params['use_curiosity']:
         params['use_curiosity'] = True
 
-    # NOTE: had to change this for each environment
-    if params['env_name']=='FreewayNoFrameskip-v0':
-        params['ep_len']=128
-    
     if params['use_curiosity']:
         params['explore_weight_schedule'] = ConstantSchedule(params['curiosity_weight'])
     else:
         params['explore_weight_schedule'] = ConstantSchedule(0.0)
+
+    # NOTE: had to change this for each environment
+    if params['env_name']=='FreewayNoFrameskip-v0':
+        params['ep_len']=128
 
     data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data')
 
@@ -129,7 +128,7 @@ def main():
     else:
         logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{args.env_name}"
 
-        # Adding method to logdir name (inefficient, but wrote like this for code readability)
+        # Adding distillation method name to logdir name (inefficient, but wrote it this way for code readability)
         if params["use_uncertainty"]:
             logdir += "_Uncertainty_"
 
