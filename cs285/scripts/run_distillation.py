@@ -101,6 +101,10 @@ def main():
     params['video_log_freq'] = -1 # This param is not used for DQN
     params['eps'] = 0.05
 
+    # If lazy input --use_icm, assumes we use curiosity
+    if not params['use_curiosity'] and params['use_icm']:
+        params['use_curiosity'] = True
+
     # NOTE: had to change this for each environment
     if params['env_name']=='FreewayNoFrameskip-v0':
         params['ep_len']=128
