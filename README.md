@@ -90,9 +90,10 @@ arguments include:
 - ☑ figure out why only training after 2048 timesteps
     - Answer: because learning starts as defined in "dqn_utils@get_env_kwargs->Freeway". Learning starts after 2000 timesteps.
 - ☑ verify distillation performance
-- ☐ add ICM to student (while allowing possiblity for choosing to use curiosity or not when training student) (Akash, JK)
-    - ☐ update ICM to use join encoder w/ distillation
-    - ☐ adapt code to update on both distillation loss and icm loss jointly.
-    - ☐ figure out weighted loss between ICM and distillation
+- ☑ add ICM to student (while allowing possiblity for choosing to use curiosity or not when training student) (Akash, JK)
+    - ☑ update ICM to use join encoder w/ distillation
+    - ☑ adapt code to update on both distillation loss and icm loss jointly.
+    - ☑ figure out weighted loss between ICM and distillation
 - ☐ train multiple level teachers across all environments (in progress)
-- ☐ identify evaluation tasks (Akash)
+- ☑ identify evaluation tasks (Akash)
+- ☐ Add uncertainity weighting
