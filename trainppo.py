@@ -116,20 +116,23 @@ if __name__ == '__main__':
             "QbertNoFrameskip-v4", # standard ppo returns 14293.3
             "UpNDownNoFrameskip-v4", # standard ppo returns 95445
         ],
-        required=True
+        required=True,
+        help="The atari environment name."
     )
 
     parser.add_argument(
         '--n_iters',
         type=int,
-        default=int(4e7)  # PPO was benched on 40 million iterations
+        default=int(4e7),  # PPO was benched on 40 million iterations
+        help="Number of iterations to train the PPO model."
     )
 
     parser.add_argument(
         '--device',
         type=str,
         choices=['auto', 'cpu', 'cuda'],
-        default="auto"
+        default="auto",
+        help='pytorch device to run training on.'
     )
 
     parser.add_argument(
