@@ -84,7 +84,7 @@ def main():
     parser.add_argument("--use_icm", action="store_true")
     parser.add_argument("--curiosity_weight", type=float, default=0.1)
     parser.add_argument("--icm_beta", type=float, default = 0.1)
-    parser.add_argument("--use_uncertainity", action="store_true", help="Use our Uncertainity based method")
+    parser.add_argument("--use_uncertainty", action="store_true", help="Use our uncertainty based method")
 
     # video logging
     parser.add_argument("--video_log_freq", action="store_true", help="Store video logs of agent every video_log_freq timesteps")
@@ -104,15 +104,19 @@ def main():
     # If lazy input --use_icm, assumes we use curiosity
     if not params['use_curiosity'] and params['use_icm']:
         params['use_curiosity'] = True
-
-    # NOTE: had to change this for each environment
-    if params['env_name']=='FreewayNoFrameskip-v0':
-        params['ep_len']=128
     
+    # If using our method, curiosity must be on (default is random features curiosity)
+    if params['use_uncertainty'] and not params['use_curiosity']:
+        params['use_curiosity'] = True
+
     if params['use_curiosity']:
         params['explore_weight_schedule'] = ConstantSchedule(params['curiosity_weight'])
     else:
         params['explore_weight_schedule'] = ConstantSchedule(0.0)
+
+    # NOTE: had to change this for each environment
+    if params['env_name']=='FreewayNoFrameskip-v0':
+        params['ep_len']=128
 
     data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data')
 
@@ -127,6 +131,18 @@ def main():
         logdir = f"{logdir}_teacher{cleaned_teacher_name}"
     else:
         logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{args.env_name}"
+
+        # Adding distillation method name to logdir name (inefficient, but wrote it this way for code readability)
+        if params["use_uncertainty"]:
+            logdir += "_Uncertainty_"
+
+        if params['use_curiosity']:
+            if params['use_icm']:
+                logdir += "_ICM"
+            else:
+                logdir += "_RandomFeatCurious"
+
+
     current_time = time.strftime("%Y%m%d-%H%M%S")
     logdir = f"{logdir}_{current_time}"
 

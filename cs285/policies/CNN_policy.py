@@ -14,8 +14,6 @@ from torch.nn import KLDivLoss
 from cs285.infrastructure import pytorch_util as ptu
 from cs285.policies.base_policy import BasePolicy
 
-
-
 class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
     def __init__(self,
                  ac_dim,
@@ -33,10 +31,7 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
 
         # init vars
         self.ac_dim = ac_dim
-        self.ob_channels = ob_dim[-1] #Assuming ob_dim(H,W,C)
-        self.n_layers = n_layers
-        self.discrete = discrete
-        self.size = size
+        self.ob_channels = ob_dim[-1] #Assuming ob_dim is (H,W,C)
         self.learning_rate = learning_rate
         self.training = training
 
@@ -46,8 +41,6 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
                 output_size=self.ac_dim,
             )
             self.logits_na.to(ptu.device)
-            self.mean_net = None
-            self.logstd = None
             self.optimizer = optim.Adam(self.logits_na.parameters(),
                                         self.learning_rate)
         else:
@@ -70,15 +63,15 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         action = action_distribution.sample()  # don't bother with rsample
         return ptu.to_numpy(action)
 
-    def update(self, observations, actions, act_logits_teacher, curiosity_loss = None, teacher_weight = None):
-        # TODO: Add Uncertainity Weight to parameters of function, incorporate into loss!
+    def update(self, observations, actions, act_logits_teacher, 
+                curiosity_loss: torch.Tensor = None, teacher_uncertainty: torch.Tensor = None):
+
         if isinstance(observations, np.ndarray):
             observations = ptu.from_numpy(observations)
         if isinstance(actions, np.ndarray):
             actions = ptu.from_numpy(actions)
         if isinstance(curiosity_loss, np.ndarray):
             curiosity_loss = ptu.from_numpy(curiosity_loss)
-        
         
         action_dist = self.forward(observations)
         act_logits_student = action_dist.logits
@@ -89,14 +82,16 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         loss = kl_loss(
             F.log_softmax(act_logits_student, dim=1), 
             F.softmax(act_logits_teacher / self.T, dim=1))
-        if teacher_weight: #If using uncertainity KL loss weighting
-            loss *= teacher_weight
         
         # r_curiosity = Internal prediction error (higher is better!). 
         # => Our optimization becomes max r_distill + r_curiosity  = min -1*(r_distill + r_curiosity) = min KL - r_curiosity
         if curiosity_loss:
+            # If using uncertainity aware, we scale intrinsic reward by teacher uncertainity (to incentivize agent to rely on itself)
+            if teacher_uncertainty:
+                curiosity_loss *= teacher_uncertainty
             loss -= curiosity_loss
 
+        # Update policy network
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

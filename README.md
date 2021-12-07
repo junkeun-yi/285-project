@@ -28,6 +28,15 @@ for example,
 
 This will generate a teacher checkpoint in `cs285/teachers/`.
 
+## Teacher Performance (Freeway-v0)
+| Teacher | Eval Performance | Iterations |
+| --- | --- | --- |
+| envFreewayNoFrameskip-v0_20211205-042645_n_iters10000000 | 32.2 | 10M |
+| envFreewayNoFrameskip-v0_20211205_185209_n_iters200000 | 21.3 | 200K |
+| envFreewayNoFrameskip-v0_20211205_185209_n_iters1000000 | 21.3 | 1M |
+| envFreewayNoFrameskip-v0_20211205_185209_n_iters100000 | 21 | 100K |
+| envFreewayNoFrameskip-v0_20211205_185209_n_iters500000 | 20.9 | 500K | 
+| envFreewayNoFrameskip-v0_20211205-185209_n_iters2000000 | 20.8 | 2M |
 # Evaluating a teacher
 
 To evaluate the performance of a teacher, run `evalppofreeway.py`:
