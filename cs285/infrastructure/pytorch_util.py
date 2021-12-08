@@ -82,25 +82,25 @@ def build_mlp(
     return nn.Sequential(*layers)
 
 
-# def build_feat_encoder(input_channels: int,
-#                     init_method=None,):
-#     # 4 layers (32 channel, 3x3 kernel, stride 2, padding 1) from ICM paper. Returns flattened feat 
-#     cnn = nn.Sequential(
-#         PreprocessAtari(),
-#         nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=3, stride=2, padding=1),
-#         nn.ReLU(),
-#         nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
-#         nn.ReLU(),
-#         nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
-#         nn.ReLU(),
-#         nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
-#         nn.ReLU(),
-#         Flatten()
-#     )
-#     if init_method:
-#         cnn.apply(init_method)
+def build_feat_encoder(input_channels: int,
+                    init_method=None,):
+    # 4 layers (32 channel, 3x3 kernel, stride 2, padding 1) from ICM paper. Returns flattened feat 
+    cnn = nn.Sequential(
+        PreprocessAtari(),
+        nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        Flatten()
+    )
+    if init_method:
+        cnn.apply(init_method)
 
-#     return cnn
+    return cnn
 
 device = None
 

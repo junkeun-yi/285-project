@@ -132,13 +132,15 @@ class RL_Trainer(object):
         print_period = self.params['batch_size']
 
         # teacher eval
-        self.evaluate_run_policy(self.agent.teacher, self.params['eval_batch_size']*5)
+        print("Evaluating teacher...")
+        self.evaluate_run_policy(self.agent.teacher, 5)
 
         eval_env_monitor = get_wrapper_by_name(self.eval_env, "Monitor")
         eval_episode_rewards = eval_env_monitor.get_episode_rewards()
         eval_returns = eval_episode_rewards[-self.params['eval_batch_size']:]
 
         self.teacher_avg_return = np.mean(eval_returns)
+        print(f"Evaluated teacher, mean {self.teacher_avg_return}")
 
         for itr in range(n_iter):
             if itr % print_period == 0:
@@ -191,8 +193,8 @@ class RL_Trainer(object):
             all_logs = self.train_agent()
 
             # Log densities and output trajectories
-            if isinstance(self.agent, DistillationAgent) and (itr % print_period == 0):
-                self.dump_density_graphs(itr)
+            # if isinstance(self.agent, DistillationAgent) and (itr % print_period == 0):
+            #     self.dump_density_graphs(itr)
 
             # log/save
             if self.logvideo or self.logmetrics:

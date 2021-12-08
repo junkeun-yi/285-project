@@ -98,7 +98,6 @@ def main():
 
     # ICM parameters
     parser.add_argument("--use_curiosity", action="store_true")
-    parser.add_argument("--use_icm", action="store_true")
     parser.add_argument("--curiosity_weight", type=float, default=0.1)
     parser.add_argument("--icm_beta", type=float, default = 0.1)
     parser.add_argument("--use_uncertainty", action="store_true", help="Use our uncertainty based method")
@@ -125,9 +124,6 @@ def main():
     ##################################
 
     # Curiosity
-    # If lazy input --use_icm, assumes we use curiosity
-    if not params['use_curiosity'] and params['use_icm']:
-        params['use_curiosity'] = True
     # If using our method, curiosity must be on (default is random features curiosity)
     if params['use_uncertainty'] and not params['use_curiosity']:
         params['use_curiosity'] = True
@@ -142,18 +138,6 @@ def main():
         params['ep_len'] = 128
     if '-v4' in params['env_name']:
         params['ep_len'] = 128
-    
-    if params['use_rnd']:
-        params['explore_weight_schedule'] = PiecewiseSchedule([(0,1), (params['num_exploration_steps'], 0)], outside_value=0.0)
-    else:
-        params['explore_weight_schedule'] = ConstantSchedule(0.0)
-
-    if params['unsupervised_exploration']:
-        params['explore_weight_schedule'] = ConstantSchedule(1.0)
-        params['exploit_weight_schedule'] = ConstantSchedule(0.0)
-        
-        if not params['use_rnd']:
-            params['learning_starts'] = params['num_exploration_steps']
     
     ###########
     # Logging #
@@ -177,10 +161,7 @@ def main():
         logdir += "_Uncertainty"
 
     if params['use_curiosity']:
-        if params['use_icm']:
-            logdir += "_ICM"
-        else:
-            logdir += "_RandomFeatCurious"
+        logdir += "_curiosity"
         logdir += f"_curiosity-weight{params['curiosity_weight']}"
 
     current_time = time.strftime("%Y%m%d-%H%M%S")

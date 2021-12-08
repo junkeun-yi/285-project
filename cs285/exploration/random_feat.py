@@ -27,12 +27,6 @@ class RandomFeatCuriosity(nn.Module, BaseExplorationModel):
         # Our feat sizes are 1152, so we did input->1152->1152->output
         self.forward_net = ptu.build_mlp(self.feat_size + self.ac_dim, self.feat_size, 2, self.feat_size)
         self.forward_loss = nn.MSELoss(reduction='mean')
-
-        # Freeze encoder for random feat (not icm)
-        if not hparams['use_icm']:
-            print("Freezing Encoder!")
-            for param in self.feat_encoder.parameters():
-                param.requires_grad = False
         
         # optimizer
         self.optimizer = self.optimizer_spec.constructor(

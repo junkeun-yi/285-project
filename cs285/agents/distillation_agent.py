@@ -1,6 +1,10 @@
+from cs285.agents.dqn_agent import DQNAgent
+from cs285.policies.argmax_policy import ArgMaxPolicy
 from .explore_or_exploit_agent import ExplorationOrExploitationAgent
 from cs285.exploration.icm_model import ICMModel
 from cs285.policies.teacher_policy import DistillationTeacherPolicy
+from cs285.infrastructure.dqn_utils import MemoryOptimizedReplayBuffer
+from cs285.critics.dqn_critic import DQNCritic
 from cs285.infrastructure.utils import *
 import cs285.infrastructure.pytorch_util as ptu
 import torch
@@ -8,15 +12,30 @@ from torch.nn import functional as F
 from torch.nn import KLDivLoss
 import numpy as np
 
-class DistillationAgent(ExplorationOrExploitationAgent):
+class DistillationAgent(DQNAgent):
     def __init__(self, env, agent_params):
         super(DistillationAgent, self).__init__(env, agent_params)
+
+        self.replay_buffer = MemoryOptimizedReplayBuffer(100000, 1, float_obs=True)
+        self.num_exploration_steps = agent_params['num_exploration_steps']
+        self.offline_exploitation = agent_params['offline_exploitation']
+
+        self.exploration_critic = DQNCritic(agent_params, self.optimizer_spec)
+        
+        self.explore_weight_schedule = agent_params['explore_weight_schedule']
+        self.exploit_weight_schedule = agent_params['exploit_weight_schedule']
+        
+        self.actor = ArgMaxPolicy(self.exploration_critic)
+        self.exploit_rew_shift = agent_params['exploit_rew_shift']
+        self.exploit_rew_scale = agent_params['exploit_rew_scale']
+        self.eps = agent_params['eps']
         
         self.curiosity = self.agent_params['use_curiosity']
         if self.curiosity:
             print("USING ICM")
-        self.exploration_model = ICMModel(agent_params, self.optimizer_spec)
-        self.exploitation_critic = None
+            self.exploration_model = ICMModel(agent_params, self.optimizer_spec)
+        
+        # self.exploitation_critic = None
         # Retrieve teacher policy
         self.teacher = DistillationTeacherPolicy(
             self.agent_params['teacher_chkpt']
@@ -39,12 +58,20 @@ class DistillationAgent(ExplorationOrExploitationAgent):
         ):
             # Calculate Distill Reward
             ac_logits_teacher = self.teacher.get_act_logits(ob_no)
-            act_logits_student = ptu.from_numpy(self.exploitation_critic.qa_values(ob_no))
-            kl_div = F.kl_div(
-                            F.log_softmax(act_logits_student, dim=1), 
-                            F.softmax(ac_logits_teacher / self.T, dim=1)) 
+            act_logits_student = ptu.from_numpy(self.exploration_critic.qa_values(ob_no))
+
+            student_val = F.log_softmax(act_logits_student, dim=1)
+            teacher_val = F.softmax(ac_logits_teacher / self.T, dim=1)
+
+            # print(f"Shapes: {student_val.shape}, {teacher_val.shape}")
+
+            kl_div = F.kl_div(student_val, teacher_val, reduction='none').sum(axis=1)
+
+            log['kl_div'] = kl_div.sum()
             
-            distill_reward = ptu.from_numpy(kl_div)
+            # print(kl_div.shape)
+            
+            distill_reward = ptu.to_numpy(-kl_div)
 
             # Get Reward Weights
             #       using the schedule's passed in (see __init__)
@@ -54,13 +81,15 @@ class DistillationAgent(ExplorationOrExploitationAgent):
             # Run Exploration Model #
             expl_bonus = 0
             if self.curiosity:
-                expl_bonus = self.exploration_model.get_intrinsic_reward(ob_no, next_ob_no, ac_na)
+                expl_bonus = ptu.to_numpy(self.exploration_model.get_intrinsic_reward(ob_no, next_ob_no, ac_na))
                 expl_bonus = normalize(expl_bonus, np.mean(expl_bonus), np.std(expl_bonus))
                 expl_model_loss = self.exploration_model.update(ob_no, next_ob_no, ac_na)
                 log['Exploration Model Loss'] = expl_model_loss
 
             # Reward Calculations #
             mixed_reward = explore_weight * expl_bonus + exploit_weight * distill_reward
+
+            # print(ob_no.shape, ac_na.shape, next_ob_no.shape, mixed_reward.shape, terminal_n.shape)
 
             # Update Critic Model #
             exploration_critic_loss = self.exploration_critic.update(ob_no, ac_na, next_ob_no, mixed_reward, terminal_n)
@@ -76,8 +105,6 @@ class DistillationAgent(ExplorationOrExploitationAgent):
 
         self.t += 1
         return log
-
-
     
     # Returns avg cross entropy between teacher original action logit for ob_no and teacher actions under augmented ob_no
     def get_teacher_uncertainty(self, ob_no: np.ndarray, teacher_ac_logits: torch.Tensor) -> torch.Tensor():
@@ -87,3 +114,30 @@ class DistillationAgent(ExplorationOrExploitationAgent):
         
     def get_action(self, ob):
         return self.actor.get_action(ob)
+
+    def step_env(self):
+        """
+            Step the env and store the transition
+            At the end of this block of code, the simulator should have been
+            advanced one step, and the replay buffer should contain one more transition.
+            Note that self.last_obs must always point to the new latest observation.
+        """
+        if (not self.offline_exploitation) or (self.t <= self.num_exploration_steps):
+            self.replay_buffer_idx = self.replay_buffer.store_frame(self.last_obs)
+
+        perform_random_action = np.random.random() < self.eps or self.t < self.learning_starts
+
+        if perform_random_action:
+            action = self.env.action_space.sample()
+        else:
+            processed = self.replay_buffer.encode_recent_observation()
+            action = self.actor.get_action(processed)
+
+        next_obs, reward, done, info = self.env.step(action)
+        self.last_obs = next_obs.copy()
+
+        if (not self.offline_exploitation) or (self.t <= self.num_exploration_steps):
+            self.replay_buffer.store_effect(self.replay_buffer_idx, action, reward, done)
+
+        if done:
+            self.last_obs = self.env.reset()

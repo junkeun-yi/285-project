@@ -72,8 +72,7 @@ To run policy distillation with curiosity, run:
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
 - `--temperature`: softmax temperature for KL divergence
-- `--use_curiosity`: use curiosity model (default is random feat -> forward model)
-- `--use_icm`: use icm model for curiosity (Note: will use curiosity even if --use_curiosity is off)
+- `--use_curiosity`: use curiosity model (ICM)
 
 # Current Codebase TODOs:
 - ☑ agents/distillation_agent.py

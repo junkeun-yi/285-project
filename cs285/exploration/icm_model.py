@@ -40,6 +40,7 @@ class ICMModel(RandomFeatCuriosity):
     def update(self, ob_no: np.ndarray, next_ob_no: np.ndarray, ac_na: np.ndarray):
         # Convert to tensor
         obs, acs, next_obs = ptu.from_numpy_obs_ac_next(ob_no, ac_na, next_ob_no)
+        acs = acs.long()
 
         # Get next_obs, predicted next_obs, predicted action (from inverse model)
         _, enc_next_obs, pred_enc_next_obs, pred_acs = self(obs, next_obs, acs)
