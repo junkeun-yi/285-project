@@ -131,7 +131,7 @@ def get_env_kwargs(env_name):
             'target_update_freq': 10000,
             'replay_buffer_size': int(1e6),
             'num_timesteps': int(20000),
-            'q_func': create_atari_q_network,
+            'q_func': create_smaller_atari_q_network,
             'learning_freq': 4,
             'grad_norm_clipping': 10,
             'input_shape': (84, 84, 1),
@@ -151,7 +151,7 @@ def get_env_kwargs(env_name):
             'target_update_freq': 10000,
             'replay_buffer_size': int(1e6),
             'num_timesteps': int(1e6),
-            'q_func': create_atari_q_network,
+            'q_func': create_smaller_atari_q_network,
             'learning_freq': 4,
             'grad_norm_clipping': 10,
             'input_shape': (84, 84, 1),
@@ -215,7 +215,7 @@ def create_smaller_atari_q_network(ob_dim, num_actions):
     # TODO: diivde input by 255
     return nn.Sequential(
         PreprocessAtari(),
-        nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=8, stride=4),
+        nn.Conv2d(in_channels=1, out_channels=32, kernel_size=8, stride=4),
         nn.ReLU(),
         nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
         nn.ReLU(),
@@ -224,7 +224,7 @@ def create_smaller_atari_q_network(ob_dim, num_actions):
         Flatten(),
         nn.Linear(7*7*32, 256),
         nn.ReLU(),
-        nn.Linear(256, output_size),
+        nn.Linear(256, num_actions),
     )
 
 def atari_exploration_schedule(num_timesteps):
