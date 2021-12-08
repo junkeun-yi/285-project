@@ -14,14 +14,16 @@ from cs285.infrastructure import pytorch_util as ptu
 from cs285.infrastructure import utils
 from cs285.infrastructure.logger import Logger
 
-from cs285.agents.explore_or_exploit_agent import ExplorationOrExploitationAgent
+from cs285.agents.distillation_agent import DistillationAgent
 from cs285.infrastructure.dqn_utils import (
         get_wrapper_by_name,
         register_custom_envs,
 )
 
-#register all of our envs
-import cs285.envs
+from stable_baselines3.common.env_util import make_atari_env
+
+# do NOT register mujoco envs, not using mujoco
+# import cs285.envs
 
 # how many rollouts to save as videos to tensorboard
 MAX_NVIDEO = 2
@@ -48,34 +50,26 @@ class RL_Trainer(object):
             use_gpu=not self.params['no_gpu'],
             gpu_id=self.params['which_gpu']
         )
+        print(f"PTU device: {ptu.device}")
 
         #############
         ## ENV
         #############
 
         # Make the gym environment
-        register_custom_envs()
-        self.env = gym.make(self.params['env_name'])
-        self.eval_env = gym.make(self.params['env_name'])
-        if not ('pointmass' in self.params['env_name']):
-            import matplotlib
-            matplotlib.use('Agg')
-            self.env.set_logdir(self.params['logdir'] + '/expl_')
-            self.eval_env.set_logdir(self.params['logdir'] + '/eval_')
+        # originally make atari env returns a wrapper with list of envs.
+        # we only want one env, so pop to get the environment.
+        self.env = make_atari_env(self.params['env_name']).envs.pop()
+        self.eval_env = make_atari_env(self.params['env_name']).envs.pop()
             
         if 'env_wrappers' in self.params:
             # These operations are currently only for Atari envs
-            self.env = wrappers.Monitor(self.env, os.path.join(self.params['logdir'], "gym"), force=True)
-            self.eval_env = wrappers.Monitor(self.eval_env, os.path.join(self.params['logdir'], "gym"), force=True)
             self.env = params['env_wrappers'](self.env)
             self.eval_env = params['env_wrappers'](self.eval_env)
-            self.mean_episode_reward = -float('nan')
-            self.best_mean_episode_reward = -float('inf')
-        if 'non_atari_colab_env' in self.params and self.params['video_log_freq'] > 0:
-            self.env = wrappers.Monitor(self.env, os.path.join(self.params['logdir'], "gym"), write_upon_reset=True)#, force=True)
-            self.eval_env = wrappers.Monitor(self.eval_env, os.path.join(self.params['logdir'], "gym"), write_upon_reset=True)
-            self.mean_episode_reward = -float('nan')
-            self.best_mean_episode_reward = -float('inf')
+        self.mean_episode_reward = -float('nan')
+        self.best_mean_episode_reward = -float('inf')
+        assert not ('non_atari_colab_env' in self.params)
+
         self.env.seed(seed)
         self.eval_env.seed(seed)
 
@@ -103,8 +97,8 @@ class RL_Trainer(object):
             self.fps = 1/self.env.model.opt.timestep
         elif 'env_wrappers' in self.params:
             self.fps = 30 # This is not actually used when using the Monitor wrapper
-        elif 'video.frames_per_second' in self.env.env.metadata.keys():
-            self.fps = self.env.env.metadata['video.frames_per_second']
+        elif 'video.frames_per_second' in self.env.metadata.keys():
+            self.fps = self.env.metadata['video.frames_per_second']
         else:
             self.fps = 10
 
@@ -134,7 +128,17 @@ class RL_Trainer(object):
         self.total_envsteps = 0
         self.start_time = time.time()
 
-        print_period = 1000 if isinstance(self.agent, ExplorationOrExploitationAgent) else 1
+        # print_period = 1000 if isinstance(self.agent, DistillationAgent) else 1
+        print_period = self.params['batch_size']
+
+        # teacher eval
+        self.evaluate_run_policy(self.agent.teacher, self.params['eval_batch_size']*5)
+
+        eval_env_monitor = get_wrapper_by_name(self.eval_env, "Monitor")
+        eval_episode_rewards = eval_env_monitor.get_episode_rewards()
+        eval_returns = eval_episode_rewards[-self.params['eval_batch_size']:]
+
+        self.teacher_avg_return = np.mean(eval_returns)
 
         for itr in range(n_iter):
             if itr % print_period == 0:
@@ -155,7 +159,7 @@ class RL_Trainer(object):
                 self.logmetrics = False
 
             # collect trajectories, to be used for training
-            if isinstance(self.agent, ExplorationOrExploitationAgent):
+            if isinstance(self.agent, DistillationAgent):
                 self.agent.step_env()
                 envsteps_this_batch = 1
                 train_video_paths = None
@@ -169,16 +173,15 @@ class RL_Trainer(object):
                         itr, initial_expertdata, collect_policy, use_batchsize)
                 )
 
-            
             if (not self.agent.offline_exploitation) or (self.agent.t <= self.agent.num_exploration_steps):
                 self.total_envsteps += envsteps_this_batch
-
+            
             # relabel the collected obs with actions from a provided expert policy
             if relabel_with_expert and itr>=start_relabel_with_expert:
                 paths = self.do_relabel_with_expert(expert_policy, paths)
 
             # add collected data to replay buffer
-            if isinstance(self.agent, ExplorationOrExploitationAgent):
+            if isinstance(self.agent, DistillationAgent):
                 if (not self.agent.offline_exploitation) or (self.agent.t <= self.agent.num_exploration_steps):
                     self.agent.add_to_replay_buffer(paths)
 
@@ -188,14 +191,14 @@ class RL_Trainer(object):
             all_logs = self.train_agent()
 
             # Log densities and output trajectories
-            if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
+            if isinstance(self.agent, DistillationAgent) and (itr % print_period == 0):
                 self.dump_density_graphs(itr)
 
             # log/save
             if self.logvideo or self.logmetrics:
                 # perform logging
                 print('\nBeginning logging procedure...')
-                if isinstance(self.agent, ExplorationOrExploitationAgent):
+                if isinstance(self.agent, DistillationAgent):
                     self.perform_dqn_logging(all_logs)
                 else:
                     self.perform_logging(itr, paths, eval_policy, train_video_paths, all_logs)
@@ -255,6 +258,21 @@ class RL_Trainer(object):
         raise NotImplementedError
         # hw1/hw2, can ignore it b/c it's not used for this hw
 
+    def evaluate_run_policy(self, policy, num_episodes, render=False):
+        """
+            Step the environment for [eval_batch_size] episodes
+        """
+        env = self.eval_env
+
+        for _ in range(num_episodes):
+            ob = env.reset()
+            done = False
+            while not done:
+                ac = policy.get_action(ob)
+                ob, rew, done, _ = env.step(ac)
+                if render:
+                    env.render()
+
     ####################################
     ####################################
     
@@ -295,6 +313,7 @@ class RL_Trainer(object):
         logs["Eval_MaxReturn"] = np.max(eval_returns)
         logs["Eval_MinReturn"] = np.min(eval_returns)
         logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
+        logs["Teacher_MeanReturn"] = self.teacher_avg_return
         
         logs['Buffer size'] = self.agent.replay_buffer.num_in_buffer
 

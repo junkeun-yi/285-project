@@ -95,8 +95,8 @@ class RL_Trainer(object):
             self.fps = 1/self.env.model.opt.timestep
         elif 'env_wrappers' in self.params:
             self.fps = 30 # This is not actually used when using the Monitor wrapper
-        elif 'video.frames_per_second' in self.env.envs[0].metadata.keys():
-            self.fps = self.env.envs[0].metadata['video.frames_per_second']
+        elif 'video.frames_per_second' in self.env.metadata.keys():
+            self.fps = self.env.metadata['video.frames_per_second']
         else:
             self.fps = 10
 
@@ -130,7 +130,7 @@ class RL_Trainer(object):
         print_period = self.params['batch_size']
 
         # teacher eval
-        self.evaluate_run_policy(self.agent.teacher)
+        self.evaluate_run_policy(self.agent.teacher, self.params['eval_batch_size']*5)
 
         eval_env_monitor = get_wrapper_by_name(self.eval_env, "Monitor")
         eval_episode_rewards = eval_env_monitor.get_episode_rewards()
@@ -143,7 +143,7 @@ class RL_Trainer(object):
                 print("\n\n********** Iteration %i ************"%itr)
 
             # decide if videos should be rendered/logged at this iteration
-            if self.params['video_log_freq'] != -1 and itr % self.params['video_log_freq'] == 0:
+            if itr % self.params['video_log_freq'] == 0 and self.params['video_log_freq'] != -1:
                 self.logvideo = True
             else:
                 self.logvideo = False
@@ -166,11 +166,14 @@ class RL_Trainer(object):
             self.total_envsteps += envsteps_this_batch
 
             # train agent (using sampled data from replay buffer)
-            all_logs = []
             if itr % print_period == 0:
                 print("\nTraining agent...")
-            # train the agent
             all_logs = self.train_agent()
+
+            # Log densities and output trajectories
+            # TODO: make sure we can use later
+            # if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
+            #     self.dump_density_graphs(itr)
 
             # log
             # if (self.logvideo or self.logmetrics):
@@ -178,10 +181,7 @@ class RL_Trainer(object):
                 print('\nBeginning logging procedure...')
                 self.perform_dqn_logging(np.array(all_logs))
 
-            # Log densities and output trajectories
-            # TODO: make sure we can use later
-            # if isinstance(self.agent, ExplorationOrExploitationAgent) and (itr % print_period == 0):
-            #     self.dump_density_graphs(itr)
+            
 
         if self.params['save_params']:
             self.agent.actor.save(f"{self.params['logdir']}/student_chkpt_n_iter{n_iter}.pt")
@@ -259,30 +259,23 @@ class RL_Trainer(object):
             all_logs.append(train_log)
         return all_logs
 
-    def train_agent_online(self):
-        all_logs = []
-        for train_step in range(self.params['num_agent_train_steps_per_iter']):
-            # TODO
-            pass
-        # TODO
-
     ####################################
     ####################################
 
-    def evaluate_run_policy(self, policy):
+    def evaluate_run_policy(self, policy, num_episodes, render=False):
         """
             Step the environment for [eval_batch_size] episodes
         """
         env = self.eval_env
 
-        for _ in range(self.params['eval_batch_size']):
+        for _ in range(num_episodes):
             ob = env.reset()
             done = False
             while not done:
                 ac = policy.get_action(ob)
                 ob, rew, done, _ = env.step(ac)
-                # env.render()
-
+                if render:
+                    env.render()
             
     
     def perform_dqn_logging(self, all_logs):
