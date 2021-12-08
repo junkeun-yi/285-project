@@ -68,6 +68,11 @@ class RL_Trainer(object):
             self.eval_env = params['env_wrappers'](self.eval_env)
         self.mean_episode_reward = -float('nan')
         self.best_mean_episode_reward = -float('inf')
+
+        self.eval_mean_episode_reward = -float('nan')
+        self.eval_max_mean_episode_reward = -float('inf') 
+        self.eval_min_mean_episode_reward = -float('inf') 
+
         assert not ('non_atari_colab_env' in self.params)
 
         self.env.seed(seed)
@@ -132,15 +137,15 @@ class RL_Trainer(object):
         print_period = self.params['batch_size']
 
         # teacher eval
-        print("Evaluating teacher...")
-        self.evaluate_run_policy(self.agent.teacher, 5)
+        # print("Evaluating teacher...")
+        # self.evaluate_run_policy(self.agent.teacher, self.eval_env, 5)
 
-        eval_env_monitor = get_wrapper_by_name(self.eval_env, "Monitor")
-        eval_episode_rewards = eval_env_monitor.get_episode_rewards()
-        eval_returns = eval_episode_rewards[-self.params['eval_batch_size']:]
+        # eval_env_monitor = get_wrapper_by_name(self.eval_env, "Monitor")
+        # eval_episode_rewards = eval_env_monitor.get_episode_rewards()
+        # eval_returns = eval_episode_rewards[-self.params['eval_batch_size']:]
 
-        self.teacher_avg_return = np.mean(eval_returns)
-        print(f"Evaluated teacher, mean {self.teacher_avg_return}")
+        # self.teacher_avg_return = np.mean(eval_returns)
+        # print(f"Evaluated teacher, mean {self.teacher_avg_return}")
 
         for itr in range(n_iter):
             if itr % print_period == 0:
@@ -260,12 +265,10 @@ class RL_Trainer(object):
         raise NotImplementedError
         # hw1/hw2, can ignore it b/c it's not used for this hw
 
-    def evaluate_run_policy(self, policy, num_episodes, render=False):
+    def evaluate_run_policy(self, policy, env, num_episodes, render=False):
         """
-            Step the environment for [eval_batch_size] episodes
+            Step the environment for num_episodes episodes, using policy to generate the action
         """
-        env = self.eval_env
-
         for _ in range(num_episodes):
             ob = env.reset()
             done = False
@@ -274,6 +277,7 @@ class RL_Trainer(object):
                 ob, rew, done, _ = env.step(ac)
                 if render:
                     env.render()
+        env.reset()
 
     ####################################
     ####################################
@@ -305,16 +309,25 @@ class RL_Trainer(object):
 
         logs.update(last_log)
         
-        eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self.eval_env, self.agent.eval_policy, self.params['eval_batch_size'], self.params['ep_len'])
-        
-        eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
-        eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
+        # eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self.eval_env, self.agent.eval_policy, self.params['eval_batch_size'], self.params['ep_len'])
+        # eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
+        # eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
 
-        logs["Eval_AverageReturn"] = np.mean(eval_returns)
-        logs["Eval_StdReturn"] = np.std(eval_returns)
-        logs["Eval_MaxReturn"] = np.max(eval_returns)
-        logs["Eval_MinReturn"] = np.min(eval_returns)
-        logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
+        # logs["Eval_AverageReturn"] = np.mean(eval_returns)
+        # logs["Eval_StdReturn"] = np.std(eval_returns)
+        # logs["Eval_MaxReturn"] = np.max(eval_returns)
+        # logs["Eval_MinReturn"] = np.min(eval_returns)
+        # logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
+
+        self.evaluate_run_policy(self.agent, self.eval_env, self.params['eval_batch_size'])
+        eval_episode_rewards = get_wrapper_by_name(self.env, "Monitor").get_episode_rewards()[-3:]
+        eval_episode_lengths = get_wrapper_by_name(self.env, "Monitor").get_episode_lengths()[-3:]
+        logs["Eval_AverageReturn"] = np.mean(eval_episode_rewards)
+        logs["Eval_StdReturn"] = np.std(eval_episode_rewards)
+        logs["Eval_MaxReturn"] = np.max(eval_episode_rewards)
+        logs["Eval_MinReturn"] = np.min(eval_episode_rewards)
+        logs["Eval_AverageEpLen"] = np.mean(eval_episode_lengths)
+        
         logs["Teacher_MeanReturn"] = self.teacher_avg_return
         
         logs['Buffer size'] = self.agent.replay_buffer.num_in_buffer

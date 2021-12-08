@@ -64,7 +64,7 @@ def main():
     parser.add_argument('--scalar_log_freq', type=int, default=int(1e3))
     parser.add_argument('--save_params', action='store_true')
 
-    parser.add_argument('--eval_batch_size', type=int, default=1000)
+    parser.add_argument('--eval_batch_size', type=int, default=3)  # this is the number of episodes to evaluate on
     parser.add_argument('--batch_size', type=int, default=256)
 
     # Explore and Exploit Parameters
