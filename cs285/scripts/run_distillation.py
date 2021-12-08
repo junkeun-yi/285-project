@@ -81,7 +81,7 @@ def main():
     # Student
     parser.add_argument('--temperature', type=int, default=0.01)
     parser.add_argument("--use_curiosity", action="store_true")
-    parser.add_argument("--use_icm", action="store_true")
+    # parser.add_argument("--use_icm", action="store_true")
     parser.add_argument("--curiosity_weight", type=float, default=0.01)
     parser.add_argument("--icm_beta", type=float, default = 0.1)
     parser.add_argument("--use_uncertainty", action="store_true", help="Use our uncertainty based method")
@@ -108,8 +108,8 @@ def main():
     params['eps'] = 0.05
 
     # If lazy input --use_icm, assumes we use curiosity
-    if not params['use_curiosity'] and params['use_icm']:
-        params['use_curiosity'] = True
+    # if not params['use_curiosity'] and params['use_icm']:
+    #     params['use_curiosity'] = True
     
     # If using our method, curiosity must be on (default is random features curiosity)
     if params['use_uncertainty'] and not params['use_curiosity']:
@@ -145,10 +145,10 @@ def main():
         logdir += "_Uncertainty"
 
     if params['use_curiosity']:
-        if params['use_icm']:
-            logdir += "_ICM"
-        else:
-            logdir += "_RandomFeatCurious"
+        # if params['use_icm']:
+        #     logdir += "_ICM"
+        # else:
+        #     logdir += "_RandomFeatCurious"
         logdir += f"_curiosity-weight{params['curiosity_weight']}"
 
     current_time = time.strftime("%Y%m%d-%H%M%S")

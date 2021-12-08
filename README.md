@@ -2,13 +2,20 @@
 
 This repository demonstrates an implementation of Rusu's [policy distillation](https://arxiv.org/abs/1511.06295) to improve the quality of students by using Pathak's [curiosity](https://arxiv.org/abs/1705.05363) during distillation.
 
-The implementation is in **pytorch 1.10.0**, using **gym[atari]** and **atari-py**. Performance is evaluated in the environments: *FreewayNoFrameskip-v0*.
+The implementation is in **pytorch 1.10.0**, using **gym[atari]** and **atari-py**. Performance is evaluated in the environments: *FreewayNoFrameskip-v0*, *FreewayNoFrameskip-v4*, *BeamRiderNoFrameskip-v4*, *BowlingNoFrameskip-v4*, *PongNoFrameskip-v4*, *MsPacmanNoFrameskip-v4*, *QbertNoFrameskip-v4*, *UpNDownNoFrameskip-v4*.
 
 # Requirements
 
+### Windows
+
+Install [swig](http://www.swig.org/download.html) by downloading the zip file for windows. Add the unzipped swig folder to your PATH.
+
+### All systems
+
 1. `pip install -r requirements.txt`
-2. `python -m atari_-_py.import_roms <path to roms>`
-3. `ale-import-roms --import-from-pkg atari_py.atari_roms`
+2. Download [atari roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html)
+3. `python -m atari_py.import_roms <path to unzipped roms folder>`
+4. `ale-import-roms --import-from-pkg atari_py.atari_roms`
 
 Note: the teacher was trained with python 3.8.10, on Ubuntu 20.04.3 LTS (64-bit), in a python venv populated using `requirements.txt`.
 
@@ -16,15 +23,15 @@ All commands are written to be executed from the base directory of this project 
 
 # Training a teacher
 
-In order to perform policy distillation, we must have a teacher for a student to learn from. We use [PPO](https://arxiv.org/abs/1707.06347) to train a teacher on the *FreewayNoFrameskip-v0* environment for 10 million iterations. 
+In order to perform policy distillation, we must have a teacher for a student to learn from. We use [PPO](https://arxiv.org/abs/1707.06347) to train a teacher on the environment of choice for 40 million iterations. 
 
-To train your own teacher on *FreewayNoFrameskip-v0* using ppo, run the below command with arguments that represent the number of training timesteps:
+To train your own teacher on an environment using ppo, run the below command with arguments that represent the number of training timesteps:
 
-    python ppofreeway.py {your number of timesteps}
+    python trainppo.py --env {env_name}
 
 for example,
 
-    python ppofreeway.py 1e7
+    python trainppo.py --env BeamRiderNoFrameskip-v4
 
 This will generate a teacher checkpoint in `cs285/teachers/`.
 
@@ -39,15 +46,14 @@ This will generate a teacher checkpoint in `cs285/teachers/`.
 | envFreewayNoFrameskip-v0_20211205-185209_n_iters2000000 | 20.8 | 2M |
 # Evaluating a teacher
 
-To evaluate the performance of a teacher, run `evalppofreeway.py`:
+To evaluate the performance of a teacher, run `evalppo.py`:
 
-    python evalppofreeway.py {args}
+    python evalppo.py {args}
 
 arguments include:
-- `--teacher_chkpt`: path to teacher checkpoint, default is the latest teacher
-- `--n_eval_episodes`: number of evaluation episodes, default 100
-
-A good teacher has a mean episode reward of 20, and an excellent teacher has a mean episode reward of greater than 30. 
+- `--env`: environment name (required)
+- `--teacher_chkpt`: path to teacher checkpoint, default is the latest teacher (required)
+- `--n_eval_episodes`: number of evaluation episodes, default 10
 
 # Running policy distillation
 
@@ -67,13 +73,11 @@ Running policy distillation using curiosity to guide the student results in ____
 
 To run policy distillation with curiosity, run:
 
-    python cs285/scripts/run_distillation.py {args}
+    python cs285/scripts/run_distillation.py --use_curiosity {args}
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
 - `--temperature`: softmax temperature for KL divergence
-- `--use_curiosity`: use curiosity model (default is random feat -> forward model)
-- `--use_icm`: use icm model for curiosity (Note: will use curiosity even if --use_curiosity is off)
 
 # Current Codebase TODOs:
 - ☑ agents/distillation_agent.py
