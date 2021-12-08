@@ -1,3 +1,4 @@
+from math import log
 from cs285.agents.dqn_agent import DQNAgent
 from cs285.policies.argmax_policy import ArgMaxPolicy
 from .explore_or_exploit_agent import ExplorationOrExploitationAgent
@@ -10,6 +11,7 @@ import cs285.infrastructure.pytorch_util as ptu
 import torch
 from torch.nn import functional as F
 from torch.nn import KLDivLoss
+from torchvision import transforms
 import numpy as np
 
 class DistillationAgent(DQNAgent):
@@ -46,6 +48,20 @@ class DistillationAgent(DQNAgent):
 
         # Flag if using uncertainty weighted distillation
         self.uncertainity_aware = self.agent_params["use_uncertainty"]
+        if self.uncertainity_aware:
+            print("Using Uncertainty!")
+            self.to_img = transforms.ToPILImage()
+            self.data_aug = [
+                                transforms.ColorJitter(brightness=0.05),
+                                transforms.Compose([
+                                                        transforms.RandomAffine(10),
+                                                        transforms.Resize(self.agent_params['ob_dim'][:-1]) #ob_dim is (H,W,C) need (H,W)            
+                                ]),
+                                transforms.Compose([
+                                                        transforms.Pad(2),
+                                                        transforms.Resize(self.agent_params['ob_dim'][:-1])
+                                ])
+            ]
 
         self.eval_policy = self.actor
 
@@ -76,6 +92,9 @@ class DistillationAgent(DQNAgent):
             # Get Reward Weights
             #       using the schedule's passed in (see __init__)
             explore_weight = self.explore_weight_schedule.value(self.t)
+            if self.uncertainity_aware:
+                explore_weight = self.get_teacher_uncertainty(ob_no, ac_logits_teacher)
+            log['Explore Weight'] = explore_weight
             exploit_weight = self.exploit_weight_schedule.value(self.t)
 
             # Run Exploration Model #
@@ -108,9 +127,21 @@ class DistillationAgent(DQNAgent):
     
     # Returns avg cross entropy between teacher original action logit for ob_no and teacher actions under augmented ob_no
     def get_teacher_uncertainty(self, ob_no: np.ndarray, teacher_ac_logits: torch.Tensor) -> torch.Tensor():
-        #TODO: Get Data Augmentations (and apply to ob_no). Get Teacher Logits for augmented obs
-        #TODO: Return avg cross entropy between o.g. action logits and new action logits
-        raise NotImplementedError
+        
+        teacher_ac_probs = F.softmax(teacher_ac_logits, dim=1)
+        obs = ptu.from_numpy(ob_no).permute((0,3,1,2))
+        uncertainty = 0
+        for data_aug in self.data_aug:
+            obs_prime = data_aug(obs).permute((0,2,3,1))
+            np_obs_prime = ptu.to_numpy(obs_prime)
+            teacher_aug_logit = self.teacher.get_act_logits(np_obs_prime)
+            log_prob_aug = F.log_softmax(teacher_aug_logit)
+            if uncertainty is None:
+                uncertainty = (-teacher_ac_probs * log_prob_aug).sum()
+            else:
+                uncertainty += (-teacher_ac_probs * log_prob_aug).sum()
+
+        return uncertainty.cpu().item() / (ob_no.shape[0] * len(self.data_aug))
         
     def get_action(self, ob):
         return self.actor.get_action(ob)
