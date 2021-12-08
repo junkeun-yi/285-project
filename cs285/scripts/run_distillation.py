@@ -82,7 +82,7 @@ def main():
     parser.add_argument('--temperature', type=int, default=0.01)
     parser.add_argument("--use_curiosity", action="store_true")
     parser.add_argument("--use_icm", action="store_true")
-    parser.add_argument("--curiosity_weight", type=float, default=0.1)
+    parser.add_argument("--curiosity_weight", type=float, default=0.01)
     parser.add_argument("--icm_beta", type=float, default = 0.1)
     parser.add_argument("--use_uncertainty", action="store_true", help="Use our uncertainty based method")
 

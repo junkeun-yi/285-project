@@ -1,6 +1,7 @@
 import abc
 import itertools
 from copy import deepcopy
+from typing import Optional
 from torch import nn
 from torch.nn import functional as F
 from torch import optim
@@ -10,6 +11,7 @@ import torch
 from torch import distributions
 
 from torch.nn import KLDivLoss
+from cs285.exploration.rnd_model import RNDModel
 
 from cs285.infrastructure import pytorch_util as ptu
 from cs285.policies.base_policy import BasePolicy
@@ -47,7 +49,6 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         else:
             raise NotImplementedError
 
-        self.T = temperature
     
     def save(self, filepath):
         torch.save(self.state_dict(), filepath)
@@ -64,38 +65,10 @@ class CNNPolicyDistillationStudent(BasePolicy, nn.Module):
         action = action_distribution.sample()  # don't bother with rsample
         return ptu.to_numpy(action)
 
-    def update(self, observations, actions, act_logits_teacher, 
-                curiosity_loss: torch.Tensor = None, teacher_uncertainty: torch.Tensor = None):
-
-        if isinstance(observations, np.ndarray):
-            observations = ptu.from_numpy(observations)
-        if isinstance(actions, np.ndarray):
-            actions = ptu.from_numpy(actions)
-        if isinstance(curiosity_loss, np.ndarray):
-            curiosity_loss = ptu.from_numpy(curiosity_loss)
-        
-        action_dist = self.forward(observations)
-        act_logits_student = action_dist.logits
-        
-        # Reward = r_distill + r_curiosity.
-        # r_distill = -KL(student, teacher). It is negative bc O <= KL < inf and we want KL -> 0 (equivalent to max -KL)
-        kl_loss = KLDivLoss(reduction='batchmean')
-        loss = kl_loss(
-            F.log_softmax(act_logits_student, dim=1), 
-            F.softmax(act_logits_teacher / self.T, dim=1))
-        
-        # r_curiosity = Internal prediction error (higher is better!). 
-        # => Our optimization becomes max r_distill + r_curiosity  = min -1*(r_distill + r_curiosity) = min KL - r_curiosity
-        if curiosity_loss:
-            # If using uncertainity aware, we scale intrinsic reward by teacher uncertainity (to incentivize agent to rely on itself)
-            if teacher_uncertainty:
-                curiosity_loss *= teacher_uncertainty
-            loss -= curiosity_loss
-
+    def update(self, loss):
         # Update policy network
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
-        return loss.item()
 
