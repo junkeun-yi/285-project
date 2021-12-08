@@ -320,8 +320,8 @@ class RL_Trainer(object):
         # logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
 
         self.evaluate_run_policy(self.agent, self.eval_env, self.params['eval_batch_size'])
-        eval_episode_rewards = get_wrapper_by_name(self.env, "Monitor").get_episode_rewards()[-3:]
-        eval_episode_lengths = get_wrapper_by_name(self.env, "Monitor").get_episode_lengths()[-3:]
+        eval_episode_rewards = get_wrapper_by_name(self.eval_env, "Monitor").get_episode_rewards()[-3:]
+        eval_episode_lengths = get_wrapper_by_name(self.eval_env, "Monitor").get_episode_lengths()[-3:]
         logs["Eval_AverageReturn"] = np.mean(eval_episode_rewards)
         logs["Eval_StdReturn"] = np.std(eval_episode_rewards)
         logs["Eval_MaxReturn"] = np.max(eval_episode_rewards)
