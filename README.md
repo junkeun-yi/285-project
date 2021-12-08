@@ -6,9 +6,16 @@ The implementation is in **pytorch 1.10.0**, using **gym[atari]** and **atari-py
 
 # Requirements
 
+### Windows
+
+Install [swig](http://www.swig.org/download.html) by downloading the zip file for windows. Add the unzipped swig folder to your PATH.
+
+### All systems
+
 1. `pip install -r requirements.txt`
-2. `python -m atari_-_py.import_roms <path to roms>`
-3. `ale-import-roms --import-from-pkg atari_py.atari_roms`
+2. Download [atari roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html)
+3. `python -m atari_py.import_roms <path to unzipped roms folder>`
+4. `ale-import-roms --import-from-pkg atari_py.atari_roms`
 
 Note: the teacher was trained with python 3.8.10, on Ubuntu 20.04.3 LTS (64-bit), in a python venv populated using `requirements.txt`.
 
@@ -20,11 +27,11 @@ In order to perform policy distillation, we must have a teacher for a student to
 
 To train your own teacher on *FreewayNoFrameskip-v0* using ppo, run the below command with arguments that represent the number of training timesteps:
 
-    python ppofreeway.py {your number of timesteps}
+    python trainppo.py {your number of timesteps}
 
 for example,
 
-    python ppofreeway.py 1e7
+    python trainppo.py 1e7
 
 This will generate a teacher checkpoint in `cs285/teachers/`.
 
@@ -39,13 +46,13 @@ This will generate a teacher checkpoint in `cs285/teachers/`.
 | envFreewayNoFrameskip-v0_20211205-185209_n_iters2000000 | 20.8 | 2M |
 # Evaluating a teacher
 
-To evaluate the performance of a teacher, run `evalppofreeway.py`:
+To evaluate the performance of a teacher, run `evalppo.py`:
 
-    python evalppofreeway.py {args}
+    python evalppo.py {args}
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint, default is the latest teacher
-- `--n_eval_episodes`: number of evaluation episodes, default 100
+- `--n_eval_episodes`: number of evaluation episodes, default 10
 
 A good teacher has a mean episode reward of 20, and an excellent teacher has a mean episode reward of greater than 30. 
 
