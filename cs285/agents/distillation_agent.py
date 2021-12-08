@@ -34,15 +34,15 @@ class DistillationAgent(DQNAgent):
         )
 
         # set curiosity model (if using)
-        self.curiosity = self.agent_params["use_curiosity"]
-        if self.curiosity:
-            self.curiosity_weight = self.agent_params['explore_weight_schedule']
-            if self.agent_params["use_icm"]:
-                print("Using ICM Model")
-                self.exploration_model = ICMModel(agent_params, self.optimizer_spec)
-            else:
-                print("Using Random Features")
-                self.exploration_model = RandomFeatCuriosity(agent_params, self.optimizer_spec)
+        # self.curiosity = self.agent_params["use_curiosity"]
+        # if self.curiosity:
+        #     self.curiosity_weight = self.agent_params['explore_weight_schedule']
+        #     if self.agent_params["use_icm"]:
+        #         print("Using ICM Model")
+        #         self.exploration_model = ICMModel(agent_params, self.optimizer_spec)
+        #     else:
+        #         print("Using Random Features")
+        #         self.exploration_model = RandomFeatCuriosity(agent_params, self.optimizer_spec)
         
         # Flag if using uncertainty weighted distillation
         self.uncertainity_aware = self.agent_params["use_uncertainty"]
@@ -67,15 +67,15 @@ class DistillationAgent(DQNAgent):
 
             # update the student
             intrinsic_rew = None
-            curiosity_loss = None
-            if self.curiosity:
-                # Get intrinsic reward (forward pred. error)
-                intrinsic_rew = self.exploration_model.get_intrinsic_reward(ob_no, next_ob_no, ac_na)
-                intrinsic_rew *= self.curiosity_weight.value(self.t) #Scale by curiosity weight
+            # curiosity_loss = None
+            # if self.curiosity:
+            #     # Get intrinsic reward (forward pred. error)
+            #     intrinsic_rew = self.exploration_model.get_intrinsic_reward(ob_no, next_ob_no, ac_na)
+            #     intrinsic_rew *= self.curiosity_weight.value(self.t) #Scale by curiosity weight
 
-                # Update curiosity module
-                curiosity_loss = self.exploration_model.update(ob_no, next_ob_no, ac_na)
-                log["Curiosity Loss"] = curiosity_loss
+            #     # Update curiosity module
+            #     curiosity_loss = self.exploration_model.update(ob_no, next_ob_no, ac_na)
+            #     log["Curiosity Loss"] = curiosity_loss
             
             # Update actor
             loss = self.actor.update(ob_no, ac_na, ac_logits_teacher, intrinsic_rew, uncertainity_weight)
