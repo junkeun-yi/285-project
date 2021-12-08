@@ -211,6 +211,22 @@ def create_atari_q_network(ob_dim, num_actions):
         nn.Linear(512, num_actions),
     )
 
+def create_smaller_atari_q_network(ob_dim, num_actions):
+    # TODO: diivde input by 255
+    return nn.Sequential(
+        PreprocessAtari(),
+        nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=8, stride=4),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, stride=1),
+        nn.ReLU(),
+        Flatten(),
+        nn.Linear(7*7*32, 256),
+        nn.ReLU(),
+        nn.Linear(256, output_size),
+    )
+
 def atari_exploration_schedule(num_timesteps):
     return PiecewiseSchedule(
         [
