@@ -55,7 +55,7 @@ Running plain policy distillation will train a student with a smaller number of 
 
 To run standard policy distillation, run:
 
-    python cs285/scripts/run_distillation.py {args}
+    python cs285/scripts/run_explore_distillation.py {args}
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
@@ -67,7 +67,7 @@ Running policy distillation using curiosity to guide the student results in ____
 
 To run policy distillation with curiosity, run:
 
-    python cs285/scripts/run_distillation.py {args}
+    python cs285/scripts/run_explore_distillation.py {args}
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
