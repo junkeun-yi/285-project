@@ -2,7 +2,7 @@
 
 This repository demonstrates an implementation of Rusu's [policy distillation](https://arxiv.org/abs/1511.06295) to improve the quality of students by using Pathak's [curiosity](https://arxiv.org/abs/1705.05363) during distillation.
 
-The implementation is in **pytorch 1.10.0**, using **gym[atari]** and **atari-py**. Performance is evaluated in the environments: *FreewayNoFrameskip-v0*.
+The implementation is in **pytorch 1.10.0**, using **gym[atari]** and **atari-py**. Performance is evaluated in the environments: *FreewayNoFrameskip-v0*, *FreewayNoFrameskip-v4*, *BeamRiderNoFrameskip-v4*, *BowlingNoFrameskip-v4*, *PongNoFrameskip-v4*, *MsPacmanNoFrameskip-v4*, *QbertNoFrameskip-v4*, *UpNDownNoFrameskip-v4*.
 
 # Requirements
 
@@ -23,15 +23,15 @@ All commands are written to be executed from the base directory of this project 
 
 # Training a teacher
 
-In order to perform policy distillation, we must have a teacher for a student to learn from. We use [PPO](https://arxiv.org/abs/1707.06347) to train a teacher on the *FreewayNoFrameskip-v0* environment for 10 million iterations. 
+In order to perform policy distillation, we must have a teacher for a student to learn from. We use [PPO](https://arxiv.org/abs/1707.06347) to train a teacher on the environment of choice for 40 million iterations. 
 
-To train your own teacher on *FreewayNoFrameskip-v0* using ppo, run the below command with arguments that represent the number of training timesteps:
+To train your own teacher on an environment using ppo, run the below command with arguments that represent the number of training timesteps:
 
-    python trainppo.py {your number of timesteps}
+    python trainppo.py --env {env_name}
 
 for example,
 
-    python trainppo.py 1e7
+    python trainppo.py --env BeamRiderNoFrameskip-v4
 
 This will generate a teacher checkpoint in `cs285/teachers/`.
 
@@ -51,10 +51,9 @@ To evaluate the performance of a teacher, run `evalppo.py`:
     python evalppo.py {args}
 
 arguments include:
-- `--teacher_chkpt`: path to teacher checkpoint, default is the latest teacher
+- `--env`: environment name (required)
+- `--teacher_chkpt`: path to teacher checkpoint, default is the latest teacher (required)
 - `--n_eval_episodes`: number of evaluation episodes, default 10
-
-A good teacher has a mean episode reward of 20, and an excellent teacher has a mean episode reward of greater than 30. 
 
 # Running policy distillation
 
@@ -74,12 +73,11 @@ Running policy distillation using curiosity to guide the student results in ____
 
 To run policy distillation with curiosity, run:
 
-    python cs285/scripts/run_explore_distillation.py {args}
+    python cs285/scripts/run_explore_distillation.py --use_curiosity {args} 
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
 - `--temperature`: softmax temperature for KL divergence
-- `--use_curiosity`: use curiosity model (ICM)
 
 # Current Codebase TODOs:
 - ☑ agents/distillation_agent.py
