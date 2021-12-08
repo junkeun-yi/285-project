@@ -259,6 +259,13 @@ class RL_Trainer(object):
             all_logs.append(train_log)
         return all_logs
 
+    def train_agent_online(self):
+        all_logs = []
+        for train_step in range(self.params['num_agent_train_steps_per_iter']):
+            # TODO
+            pass
+        # TODO
+
     ####################################
     ####################################
 

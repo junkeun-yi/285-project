@@ -12,9 +12,10 @@ Environment: BowlingNoFrameskip-v4
 Bad 30	0
 python cs285/scripts/run_distillation.py --env BowlingNoFrameskip-v4 --teacher_chkpt cs285/teachers/envBowlingNoFrameskip-v4_20211206-021633_n_iters500000
 Medium 52	0
-python cs285/scripts/run_distillation.py --env BowlingNoFrameskip-v4 --teacher_chkpt cs285/teachers/envBowlingNoFrameskip-v4_20211206-021633_n_iters40000000.zip
+python cs285/scripts/run_distillation.py --env BowlingNoFrameskip-v4 --teacher_chkpt cs285/teachers/envBowlingNoFrameskip-v4_20211206-021633_n_iters40000000
 Good 56	0
 python cs285/scripts/run_distillation.py --env BowlingNoFrameskip-v4 --teacher_chkpt cs285/teachers/envBowlingNoFrameskip-v4_20211206-021633_n_iters5000000
+Note: best teacher distillation plateaus in 20k iterations
 
 Environment: MsPacmanNoFrameskip-v4
 Bad 704	309.037214587499

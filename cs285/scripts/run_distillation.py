@@ -89,7 +89,10 @@ def main():
     # parser.add_argument("--device", choices=['auto', 'cuda', 'cpu'])
 
     # video logging
-    parser.add_argument("--video_log_freq", action="store_true", help="Store video logs of agent every video_log_freq timesteps")
+    parser.add_argument(
+        "--video_log_freq", 
+        type=int,
+        default=-1, help="Store video logs of agent every video_log_freq timesteps")
 
     args = parser.parse_args()
 
@@ -101,9 +104,6 @@ def main():
     params['num_agent_train_steps_per_iter'] = 1
     params['num_critic_updates_per_agent_update'] = 1
     params['exploit_weight_schedule'] = ConstantSchedule(1.0)
-
-    if params['video_log_freq'] == False:
-        params['video_log_freq'] = -1
 
     params['eps'] = 0.05
 

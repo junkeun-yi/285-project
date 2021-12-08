@@ -118,8 +118,12 @@ def get_env_kwargs(env_name):
             'env_wrappers': pointmass_empty_wrapper
         }
         kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['num_timesteps'])
-
-    elif 'FreewayNoFrameskip-v0' == env_name:
+    # environments where max num_timesteps = 20000. 
+    elif env_name in [
+        'FreewayNoFrameskip-v0', 
+        'FreewayNoFrameskip-v4',
+        'BowlingNoFrameskip-v4'
+        ]:
         def freeway_empty_wrapper(env):
             return env
         kwargs = {
@@ -137,7 +141,7 @@ def get_env_kwargs(env_name):
         }
         kwargs['optimizer_spec'] = atari_optimizer(kwargs['num_timesteps'])
         kwargs['exploration_schedule'] = distill_exploration_schedule(kwargs['num_timesteps'])
-        
+    
     # little trick to run all our envs
     elif 'v4' in env_name:
         def atari_empty_wrapper(env):
