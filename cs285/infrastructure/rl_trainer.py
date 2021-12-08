@@ -313,6 +313,7 @@ class RL_Trainer(object):
         logs["Eval_MaxReturn"] = np.max(eval_returns)
         logs["Eval_MinReturn"] = np.min(eval_returns)
         logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
+        logs["Teacher_MeanReturn"] = self.teacher_avg_return
         
         logs['Buffer size'] = self.agent.replay_buffer.num_in_buffer
 
