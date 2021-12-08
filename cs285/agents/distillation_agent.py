@@ -1,8 +1,6 @@
 from cs285.infrastructure.utils import *
 from cs285.policies.teacher_policy import DistillationTeacherPolicy
 from cs285.policies.CNN_policy import CNNPolicyDistillationStudent
-from cs285.exploration.random_feat import RandomFeatCuriosity
-from cs285.exploration.icm_model import ICMModel
 from .dqn_agent import DQNAgent
 import cs285.infrastructure.pytorch_util as ptu
 import torch

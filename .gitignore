@@ -6,3 +6,5 @@ logs/
 data/
 *.egg-info*
 train_output*
+*/desktop.ini
+.idea
