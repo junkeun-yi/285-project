@@ -67,6 +67,13 @@ class DistillationAgent(DQNAgent):
                                                         transforms.Resize(self.agent_params['ob_dim'][:-1])
                                 ])
             ]
+            if self.agent_params['aug_idx'] != -1:
+                self.data_aug = [self.data_aug[self.agent_params['aug_idx']]]
+
+        # Flag for ablations
+        self.no_distillation = self.agent_params['no_distillation']
+        if self.no_distillation:
+            print("NO DISTILL!")
 
         self.eval_policy = self.actor
 
@@ -77,19 +84,21 @@ class DistillationAgent(DQNAgent):
                 and self.replay_buffer.can_sample(self.batch_size)
         ):
             obs = ptu.from_numpy(ob_no)
-
-            # retrieve teacher's action logits on observations
-            ac_logits_teacher = self.teacher.get_act_logits(ob_no)
             ac_logits_student = self.actor(obs).logits
             acs = F.gumbel_softmax(ac_logits_student, hard=True, dim=1)
+            
+            loss = None
+            if not self.no_distillation:
+                # retrieve teacher's action logits on observations
+                ac_logits_teacher = self.teacher.get_act_logits(ob_no)
 
-            # Get KL Loss
-            kl_loss = KLDivLoss(reduction='batchmean')
-            loss = kl_loss(
-                F.log_softmax(ac_logits_student, dim=1), 
-                F.softmax(ac_logits_teacher / self.T, dim=1))
+                # Get KL Loss
+                kl_loss = KLDivLoss(reduction='batchmean')
+                loss = kl_loss(
+                    F.log_softmax(ac_logits_student, dim=1), 
+                    F.softmax(ac_logits_teacher / self.T, dim=1))
 
-            log['KL Loss'] = loss.item()
+                log['KL Loss'] = loss.item()
 
             # If using uncertainty, find teacher uncertainty under data augmentations
             uncertainity_weight = None
@@ -106,7 +115,10 @@ class DistillationAgent(DQNAgent):
                 if uncertainity_weight is not None:
                     curiosity_weight = uncertainity_weight
 
-                loss -= curiosity_weight * intrinsic_rew
+                if loss:
+                    loss -= curiosity_weight * intrinsic_rew
+                else: #For ablation where we only do curiosity on policy net
+                    loss = curiosity_weight * intrinsic_rew
 
 
             self.actor.update(loss)
@@ -132,7 +144,7 @@ class DistillationAgent(DQNAgent):
             obs_prime = data_aug(obs).permute((0,2,3,1))
             np_obs_prime = ptu.to_numpy(obs_prime)
             teacher_aug_logit = self.teacher.get_act_logits(np_obs_prime)
-            log_prob_aug = F.log_softmax(teacher_aug_logit)
+            log_prob_aug = F.log_softmax(teacher_aug_logit, dim=1)
             if uncertainty is None:
                 uncertainty = (-teacher_ac_probs * log_prob_aug).sum()
             else:

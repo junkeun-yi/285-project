@@ -85,6 +85,8 @@ def main():
     parser.add_argument("--curiosity_weight", type=float, default=0.01)
     parser.add_argument("--icm_beta", type=float, default = 0.1)
     parser.add_argument("--use_uncertainty", action="store_true", help="Use our uncertainty based method")
+    parser.add_argument("--no_distillation", action="store_true", help="Whether to not use distillation (for ablation)")
+    parser.add_argument("--aug_idx", type=int, default=-1, choices=[-1,0,1,2], help="Which data aug (0-indexed!) to use")
 
     # parser.add_argument("--device", choices=['auto', 'cuda', 'cpu'])
 
@@ -111,6 +113,10 @@ def main():
     # if not params['use_curiosity'] and params['use_icm']:
     #     params['use_curiosity'] = True
     
+    # If no distill, curiosity must be on
+    if params['no_distillation']:
+        params['use_curiosity'] = True
+
     # If using our method, curiosity must be on (default is random features curiosity)
     if params['use_uncertainty'] and not params['use_curiosity']:
         params['use_curiosity'] = True
