@@ -79,6 +79,33 @@ arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
 - `--temperature`: softmax temperature for KL divergence
 
+# Experiemnts todo
+
+
+| Env | Teacher | Distill | Curiosity | Uncertainty | Seed=2 | Seed=3 |
+| --- | --- | --- | --- | --- | --- | --- |
+| BeamRider | good | yes | --- | --- | todo | --- |
+| BeamRider | good | --- | yes | --- | todo | --- |
+| BeamRider | good | --- | --- | yes | todo | --- |
+| BeamRider | bad | yes | --- | --- | inpr | --- |
+| BeamRider | bad | --- | yes | --- | inpr | --- |
+| BeamRider | bad | --- | --- | yes | inpr | --- |
+|  |  |  |  |  |  |  |
+| Qbert | good | yes | --- | --- | done | --- |
+| Qbert | good | --- | yes | --- | --- | --- |
+| Qbert | good | --- | --- | yes | --- | --- |
+| Qbert | bad | yes | --- | --- | done | --- |
+| Qbert | bad | --- | yes | --- | inpr | --- |
+| Qbert | bad | --- | --- | yes | inpr | --- |
+|  |  |  |  |  |  |  |
+| MsPacman | good | yes | --- | --- | done | --- |
+| MsPacman | good | --- | yes | --- | --- | --- |
+| MsPacman | good | --- | --- | yes | --- | --- |
+| MsPacman | bad | yes | --- | --- | done | --- |
+| MsPacman | bad | --- | yes | --- | inpr | --- |
+| MsPacman | bad | --- | --- | yes | inpr | --- |
+
+
 # Current Codebase TODOs:
 - ☑ agents/distillation_agent.py
     - ☑ load teacher policy model and pass it into distillation agent.
