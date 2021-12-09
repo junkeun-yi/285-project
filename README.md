@@ -82,28 +82,28 @@ arguments include:
 # Experiemnts todo
 
 
-| Env | Teacher | Distill | Curiosity | Uncertainty | Seed=2 | Seed=3 |
-| --- | --- | --- | --- | --- | --- | --- |
-| BeamRider | good | yes | --- | --- | inpr | --- |
-| BeamRider | good | --- | yes | --- | inpr | --- |
-| BeamRider | good | --- | --- | yes | inpr | --- |
-| BeamRider | bad | yes | --- | --- | inpr | --- |
-| BeamRider | bad | --- | yes | --- | inpr | --- |
-| BeamRider | bad | --- | --- | yes | inpr | --- |
-|  |  |  |  |  |  |  |
-| Qbert | good | yes | --- | --- | done | --- |
-| Qbert | good | --- | yes | --- | --- | --- |
-| Qbert | good | --- | --- | yes | --- | --- |
-| Qbert | bad | yes | --- | --- | done | --- |
-| Qbert | bad | --- | yes | --- | inpr | --- |
-| Qbert | bad | --- | --- | yes | inpr | --- |
-|  |  |  |  |  |  |  |
-| MsPacman | good | yes | --- | --- | done | --- |
-| MsPacman | good | --- | yes | --- | --- | --- |
-| MsPacman | good | --- | --- | yes | --- | --- |
-| MsPacman | bad | yes | --- | --- | done | --- |
-| MsPacman | bad | --- | yes | --- | inpr | --- |
-| MsPacman | bad | --- | --- | yes | inpr | --- |
+| Env | Teacher | Type | Seed=2 | Seed=3 |
+| --- | --- | --- | --- | --- |
+| BeamRider | good | Distill | inpr |  |
+| BeamRider | good | Curiosity | inpr |  |
+| BeamRider | good | Uncertainty | inpr |  |
+| BeamRider | bad | Distill | inpr |  |
+| BeamRider | bad | Curiosity | inpr |  |
+| BeamRider | bad | Uncertainty | inpr |  |
+|  |  |  |  |  |
+| Qbert | good | Distill | done |  |
+| Qbert | good | Curiosity | done |  |
+| Qbert | good | Uncertainty | done |  |
+| Qbert | bad | Distill | done |  |
+| Qbert | bad | Curiosity | done |  |
+| Qbert | bad | Uncertainty | done |  |
+|  |  |  |  |  |
+| MsPacman | good | Distill | done |  |
+| MsPacman | good | Curiosity |  |  |
+| MsPacman | good | Uncertainty |  |  |
+| MsPacman | bad | Distill | done |  |
+| MsPacman | bad | Curiosity | inpr |  |
+| MsPacman | bad | Uncertainty | inpr |  |
 
 
 # Current Codebase TODOs:
