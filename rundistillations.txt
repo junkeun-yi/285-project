@@ -34,11 +34,11 @@ python cs285/scripts/run_distillation.py --env PongNoFrameskip-v4 --teacher_chkp
 
 Environment: QbertNoFrameskip-v4
 Bad 607.5	80.6613290245084
-python cs285/scripts/run_distillation.py --env QbertNoFrameskip-v4 --teacher_chkpt cs285/teachers/envQbertNoFrameskip-v4_20211206-021759_n_iters1000000
+python cs285/scripts/run_distillation.py --env QbertNoFrameskip-v4 --teacher_chkpt cs285/teachers/envQbertNoFrameskip-v4_20211206-021759_n_iters1000000 --no_gpu --eval_batch_size 2
 Medium 5582.5	1664.97184660882
 python cs285/scripts/run_distillation.py --env QbertNoFrameskip-v4 --teacher_chkpt cs285/teachers/envQbertNoFrameskip-v4_20211206-021759_n_iters10000000
 Good 16312.5	237.5
-python cs285/scripts/run_distillation.py --env QbertNoFrameskip-v4 --teacher_chkpt cs285/teachers/envQbertNoFrameskip-v4_20211206-021759_n_iters40000000
+python cs285/scripts/run_distillation.py --env QbertNoFrameskip-v4 --teacher_chkpt cs285/teachers/envQbertNoFrameskip-v4_20211206-021759_n_iters40000000 --eval_batch_size 10
 
 Environment: UpNDownNoFrameskip-v4
 Bad 550	0

@@ -79,6 +79,33 @@ arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
 - `--temperature`: softmax temperature for KL divergence
 
+# Experiemnts todo
+
+
+| Env | Teacher | Type | Seed=2 | Seed=3 |
+| --- | --- | --- | --- | --- |
+| BeamRider | good | Distill | inpr |  |
+| BeamRider | good | Curiosity | inpr |  |
+| BeamRider | good | Uncertainty | inpr |  |
+| BeamRider | bad | Distill | inpr |  |
+| BeamRider | bad | Curiosity | inpr |  |
+| BeamRider | bad | Uncertainty | inpr |  |
+|  |  |  |  |  |
+| Qbert | good | Distill | done |  |
+| Qbert | good | Curiosity | done |  |
+| Qbert | good | Uncertainty | done |  |
+| Qbert | bad | Distill | done |  |
+| Qbert | bad | Curiosity | done |  |
+| Qbert | bad | Uncertainty | done |  |
+|  |  |  |  |  |
+| MsPacman | good | Distill | done |  |
+| MsPacman | good | Curiosity |  |  |
+| MsPacman | good | Uncertainty |  |  |
+| MsPacman | bad | Distill | done |  |
+| MsPacman | bad | Curiosity | inpr |  |
+| MsPacman | bad | Uncertainty | inpr |  |
+
+
 # Current Codebase TODOs:
 - ☑ agents/distillation_agent.py
     - ☑ load teacher policy model and pass it into distillation agent.
