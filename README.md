@@ -84,9 +84,9 @@ arguments include:
 
 | Env | Teacher | Distill | Curiosity | Uncertainty | Seed=2 | Seed=3 |
 | --- | --- | --- | --- | --- | --- | --- |
-| BeamRider | good | yes | --- | --- | todo | --- |
-| BeamRider | good | --- | yes | --- | todo | --- |
-| BeamRider | good | --- | --- | yes | todo | --- |
+| BeamRider | good | yes | --- | --- | inpr | --- |
+| BeamRider | good | --- | yes | --- | inpr | --- |
+| BeamRider | good | --- | --- | yes | inpr | --- |
 | BeamRider | bad | yes | --- | --- | inpr | --- |
 | BeamRider | bad | --- | yes | --- | inpr | --- |
 | BeamRider | bad | --- | --- | yes | inpr | --- |
