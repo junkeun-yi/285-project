@@ -89,6 +89,8 @@ class DistillationAgent(DQNAgent):
                 F.log_softmax(ac_logits_student, dim=1), 
                 F.softmax(ac_logits_teacher / self.T, dim=1))
 
+            log['KL Loss'] = loss.item()
+
             # If using uncertainty, find teacher uncertainty under data augmentations
             uncertainity_weight = None
             if self.uncertainity_aware:

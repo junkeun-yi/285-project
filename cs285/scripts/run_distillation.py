@@ -140,6 +140,8 @@ def main():
     else:
         logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{params['env_name']}"
 
+    logdir += f"seed_{params['seed']}"
+
     # Adding distillation method name to logdir name (inefficient, but wrote it this way for code readability)
     if params["use_uncertainty"]:
         logdir += "_Uncertainty"
