@@ -1,4 +1,6 @@
-# Curiously Learning Task-Specific Skills via Distillation
+# For up-to-date code, please see the 'oldrepo' branch.
+
+#Curiously Learning Task-Specific Skills via Distillation
 
 This repository demonstrates an implementation of Rusu's [policy distillation](https://arxiv.org/abs/1511.06295) to improve the quality of students by using Pathak's [curiosity](https://arxiv.org/abs/1705.05363) during distillation.
 
