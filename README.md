@@ -1,8 +1,8 @@
 # Curiously Learning Task-Specific Skills via Distillation
 
-This repository demonstrates an implementation of Rusu's [policy distillation](https://arxiv.org/abs/1511.06295) to improve the quality of students by using Pathak's [curiosity](https://arxiv.org/abs/1705.05363) during distillation.
+This repository demonstrates an reward-free implementation of Rusu's [policy distillation](https://arxiv.org/abs/1511.06295) to improve the quality of students by using [Random Network Distillation](https://arxiv.org/abs/1810.12894) as a measure of novelty, to curiously explore during distillation.
 
-The implementation is in **pytorch 1.10.0**, using **gym[atari]** and **atari-py**. Performance is evaluated in the environments: *FreewayNoFrameskip-v0*, *FreewayNoFrameskip-v4*, *BeamRiderNoFrameskip-v4*, *BowlingNoFrameskip-v4*, *PongNoFrameskip-v4*, *MsPacmanNoFrameskip-v4*, *QbertNoFrameskip-v4*, *UpNDownNoFrameskip-v4*.
+The implementation is in **pytorch 1.10.0**, using **gym[atari]** and **atari-py**. Performance is evaluated in the environments: *BeamRiderNoFrameskip-v4*, *MsPacmanNoFrameskip-v4*, *QbertNoFrameskip-v4*. All other atari environments are supported.
 
 # Requirements
 
@@ -16,6 +16,7 @@ Install [swig](http://www.swig.org/download.html) by downloading the zip file fo
 2. Download [atari roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html)
 3. `python -m atari_py.import_roms <path to unzipped roms folder>`
 4. `ale-import-roms --import-from-pkg atari_py.atari_roms`
+5. `pip install -e .`
 
 Note: the teacher was trained with python 3.8.10, on Ubuntu 20.04.3 LTS (64-bit), in a python venv populated using `requirements.txt`.
 
@@ -27,23 +28,14 @@ In order to perform policy distillation, we must have a teacher for a student to
 
 To train your own teacher on an environment using ppo, run the below command with arguments that represent the number of training timesteps:
 
-    python trainppo.py --env {env_name}
+    python trainppo.py --env {env_name} --n_iters {n_iters}
 
 for example,
 
-    python trainppo.py --env BeamRiderNoFrameskip-v4
+    python trainppo.py --env BeamRiderNoFrameskip-v4 --n_iters 40000000
 
 This will generate a teacher checkpoint in `cs285/teachers/`.
 
-## Teacher Performance (Freeway-v0)
-| Teacher | Eval Performance | Iterations |
-| --- | --- | --- |
-| envFreewayNoFrameskip-v0_20211205-042645_n_iters10000000 | 32.2 | 10M |
-| envFreewayNoFrameskip-v0_20211205_185209_n_iters200000 | 21.3 | 200K |
-| envFreewayNoFrameskip-v0_20211205_185209_n_iters1000000 | 21.3 | 1M |
-| envFreewayNoFrameskip-v0_20211205_185209_n_iters100000 | 21 | 100K |
-| envFreewayNoFrameskip-v0_20211205_185209_n_iters500000 | 20.9 | 500K | 
-| envFreewayNoFrameskip-v0_20211205-185209_n_iters2000000 | 20.8 | 2M |
 # Evaluating a teacher
 
 To evaluate the performance of a teacher, run `evalppo.py`:
@@ -54,6 +46,19 @@ arguments include:
 - `--env`: environment name (required)
 - `--teacher_chkpt`: path to teacher checkpoint, default is the latest teacher (required)
 - `--n_eval_episodes`: number of evaluation episodes, default 10
+
+## Teacher Performance
+
+Freeway-v0
+
+| Teacher | Eval Performance | Iterations |
+| --- | --- | --- |
+| envFreewayNoFrameskip-v0_20211205-042645_n_iters10000000 | 32.2 | 10M |
+| envFreewayNoFrameskip-v0_20211205_185209_n_iters200000 | 21.3 | 200K |
+| envFreewayNoFrameskip-v0_20211205_185209_n_iters1000000 | 21.3 | 1M |
+| envFreewayNoFrameskip-v0_20211205_185209_n_iters100000 | 21 | 100K |
+| envFreewayNoFrameskip-v0_20211205_185209_n_iters500000 | 20.9 | 500K | 
+| envFreewayNoFrameskip-v0_20211205-185209_n_iters2000000 | 20.8 | 2M |
 
 # Running policy distillation
 
