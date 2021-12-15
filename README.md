@@ -13,9 +13,10 @@ Install [swig](http://www.swig.org/download.html) by downloading the zip file fo
 ### All systems
 
 1. `pip install -r requirements.txt`
-2. Download [atari roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html)
-3. `python -m atari_py.import_roms <path to unzipped roms folder>`
-4. `ale-import-roms --import-from-pkg atari_py.atari_roms`
+2. Run `pip install -e .`
+3. Download [atari roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html)
+4. `python -m atari_py.import_roms <path to unzipped roms folder>`
+5. `ale-import-roms --import-from-pkg atari_py.atari_roms`
 
 Note: the teacher was trained with python 3.8.10, on Ubuntu 20.04.3 LTS (64-bit), in a python venv populated using `requirements.txt`.
 
@@ -91,12 +92,12 @@ arguments include:
 | BeamRider | bad | Curiosity | inpr |  |
 | BeamRider | bad | Uncertainty | inpr |  |
 |  |  |  |  |  |
-| Qbert | good | Distill | done |  |
-| Qbert | good | Curiosity | done |  |
-| Qbert | good | Uncertainty | done |  |
-| Qbert | bad | Distill | done |  |
-| Qbert | bad | Curiosity | done |  |
-| Qbert | bad | Uncertainty | done |  |
+| Qbert | good | Distill | done | done |
+| Qbert | good | Curiosity | done | inpr |
+| Qbert | good | Uncertainty | inpr | inpr |
+| Qbert | bad | Distill | done | done |
+| Qbert | bad | Curiosity | done | done |
+| Qbert | bad | Uncertainty | done | done |
 |  |  |  |  |  |
 | MsPacman | good | Distill | done |  |
 | MsPacman | good | Curiosity |  |  |

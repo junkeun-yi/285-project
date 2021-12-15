@@ -88,6 +88,8 @@ def main():
     parser.add_argument("--no_distillation", action="store_true", help="Whether to not use distillation (for ablation)")
     parser.add_argument("--aug_idx", type=int, default=-1, choices=[-1,0,1,2], help="Which data aug (0-indexed!) to use")
 
+    parser.add_argument("--num_timesteps", type=int)
+
     # parser.add_argument("--device", choices=['auto', 'cuda', 'cpu'])
 
     # video logging
@@ -97,6 +99,10 @@ def main():
 
     # convert to dictionary
     params = vars(args)
+
+    # remove nones
+    if params['num_timesteps'] is None:
+        del params['num_timesteps']
 
     print(params["teacher_chkpt"])
     params['double_q'] = True
@@ -146,7 +152,7 @@ def main():
     else:
         logdir = f"{logdir}_teacher{cleaned_teacher_name}_env{params['env_name']}"
 
-    logdir += f"seed_{params['seed']}"
+    logdir += f"_seed{params['seed']}"
 
     # Adding distillation method name to logdir name (inefficient, but wrote it this way for code readability)
     if params["use_uncertainty"]:
