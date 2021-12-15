@@ -13,10 +13,10 @@ Install [swig](http://www.swig.org/download.html) by downloading the zip file fo
 ### All systems
 
 1. `pip install -r requirements.txt`
-2. Download [atari roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html)
-3. `python -m atari_py.import_roms <path to unzipped roms folder>`
-4. `ale-import-roms --import-from-pkg atari_py.atari_roms`
-5. `pip install -e .`
+2. Run `pip install -e .`
+3. Download [atari roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html)
+4. `python -m atari_py.import_roms <path to unzipped roms folder>`
+5. `ale-import-roms --import-from-pkg atari_py.atari_roms`
 
 Note: the teacher was trained with python 3.8.10, on Ubuntu 20.04.3 LTS (64-bit), in a python venv populated using `requirements.txt`.
 
@@ -34,7 +34,7 @@ for example,
 
     python trainppo.py --env BeamRiderNoFrameskip-v4 --n_iters 40000000
 
-This will generate a teacher checkpoint in `cs285/teachers/`.
+This will generate a teacher checkpoint in `src/teachers/`.
 
 # Evaluating a teacher
 
@@ -49,16 +49,7 @@ arguments include:
 
 ## Teacher Performance
 
-Freeway-v0
-
-| Teacher | Eval Performance | Iterations |
-| --- | --- | --- |
-| envFreewayNoFrameskip-v0_20211205-042645_n_iters10000000 | 32.2 | 10M |
-| envFreewayNoFrameskip-v0_20211205_185209_n_iters200000 | 21.3 | 200K |
-| envFreewayNoFrameskip-v0_20211205_185209_n_iters1000000 | 21.3 | 1M |
-| envFreewayNoFrameskip-v0_20211205_185209_n_iters100000 | 21 | 100K |
-| envFreewayNoFrameskip-v0_20211205_185209_n_iters500000 | 20.9 | 500K | 
-| envFreewayNoFrameskip-v0_20211205-185209_n_iters2000000 | 20.8 | 2M |
+Teacher performance for many different n_iters has been evaluated and recorded in `evalppo_logs/evalppo.csv`. Each of these teachers has been saved to src/teachers.
 
 # Running policy distillation
 
@@ -66,84 +57,46 @@ Running plain policy distillation will train a student with a smaller number of 
 
 To run standard policy distillation, run:
 
-    python cs285/scripts/run_distillation.py {args}
+    python src/scripts/run_distillation.py {args}
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
 - `--temperature`: softmax temperature for KL divergence
 
-# Running policy distillation with curiosity
+# Running policy distillation with curiosity and uncertainty
 
-Running policy distillation using curiosity to guide the student results in ________.
+Running policy distillation using curiosity and teacher uncertainty to guide the student results in better performance with high quality teachers.
 
-To run policy distillation with curiosity, run:
+To run policy distillation with curiosity only, run:
 
-    python cs285/scripts/run_distillation.py --use_curiosity {args}
+    python src/scripts/run_distillation.py --use_curiosity {args}
+    
+To run policy distillation with uncertainty-guided curiosity, run:
+
+    python src/scripts/run_distillation.py --use_uncertinaty {args}
+
+(`--use_uncertainty` will automatically set the `--use_curiosity` flag to true.)
 
 arguments include:
 - `--teacher_chkpt`: path to teacher checkpoint
 - `--temperature`: softmax temperature for KL divergence
 
-# Experiemnts todo
+# Results
 
+We selected a good, medium, and bad teacher for each environment. These are marked with the use=TRUE flag in `evalppo_logs/evalppo_sorted.csv`. We evaluated distillation with the good and bad teacher on three environments.
 
-| Env | Teacher | Type | Seed=2 | Seed=3 |
-| --- | --- | --- | --- | --- |
-| BeamRider | good | Distill | inpr |  |
-| BeamRider | good | Curiosity | inpr |  |
-| BeamRider | good | Uncertainty | inpr |  |
-| BeamRider | bad | Distill | inpr |  |
-| BeamRider | bad | Curiosity | inpr |  |
-| BeamRider | bad | Uncertainty | inpr |  |
-|  |  |  |  |  |
-| Qbert | good | Distill | done |  |
-| Qbert | good | Curiosity | done |  |
-| Qbert | good | Uncertainty | done |  |
-| Qbert | bad | Distill | done |  |
-| Qbert | bad | Curiosity | done |  |
-| Qbert | bad | Uncertainty | done |  |
-|  |  |  |  |  |
-| MsPacman | good | Distill | done |  |
-| MsPacman | good | Curiosity |  |  |
-| MsPacman | good | Uncertainty |  |  |
-| MsPacman | bad | Distill | done |  |
-| MsPacman | bad | Curiosity | inpr |  |
-| MsPacman | bad | Uncertainty | inpr |  |
+## BeamRider
 
+![](images/BeamRiderBad.png)
+![](images/BeamRiderCuriosityOnly.png)
+![](images/BeamRiderGood.png)
 
-# Current Codebase TODOs:
-- ☑ agents/distillation_agent.py
-    - ☑ load teacher policy model and pass it into distillation agent.
-    - ☑ passing in teacher's stats to student for student update.
-- ☑ policies/teacher_policy.py
-    - ☑ make simple policy that returns values from stable_baselines3 PPO methods.
-- ☑ policies/MLP_policy.py
-    - ☑ make simple student policy.
-- ☑ infrastructure/rl_trainer_distillation.py
-    - ☑ load environment in atari wrapper.
-    - ☑ make logic for rolling out for student, 
-- ☑ scripts/run_distillation.py
-    - make script to run policy distillation.
-- ☑ debug code.
-    - ☑ Resolve path issue for training logging (see FIXME [Path Issue] in code)
-- ☑ log useful statistics
-    - ☑ Adapt logging to see if actually logging useful data
-- ☑ fix evaluation bug, ensure logging works for multiple environments
-- ☑ make sure ppo training works on multiple envs
-- ☑ use callbacks to checkpoint ppo
-- ☑ implement epsilon greedy schedule for distillation
-- ☑ figure out why only training after 2048 timesteps
-    - Answer: because learning starts as defined in "dqn_utils@get_env_kwargs->Freeway". Learning starts after 2000 timesteps.
-- ☑ verify distillation performance
-- ☑ add ICM to student (while allowing possiblity for choosing to use curiosity or not when training student) (Akash, JK)
-    - ☑ update ICM to use join encoder w/ distillation
-    - ☑ adapt code to update on both distillation loss and icm loss jointly.
-    - ☑ figure out weighted loss between ICM and distillation
-- ☐ train multiple level teachers across all environments (in progress)
-- ☑ identify evaluation tasks (Akash)
-- ☐ Add uncertainity weighting
-    - color jitter/blackout (random erasing)/gaussian blur
-    - rotation (small)
-    - pad + reinterpolation
-    - randomadjustsharpness? randomautocontrast?
-    - 
+# Ms. Pac-Man
+
+![](images/MsPacManBad.png)
+![](images/MsPacManGood.png)
+
+# Qbert
+
+![](images/QbertBad.png)
+![](images/QbertGood.png)

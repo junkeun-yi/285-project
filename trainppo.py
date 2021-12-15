@@ -70,7 +70,7 @@ def train_model(arguments):
     base_chkpt_freq = arguments['base_chkpt_freq']
     env = make_atari_env(env_name, n_envs=8)  # make 8 parallel environments
     datestring = datetime.now().strftime('%Y%m%d-%H%M%S')
-    save_dir = "cs285/teachers/"
+    save_dir = "src/teachers/"
     save_name = (
         f"env{env_name}_"
         f"{datestring}_"
